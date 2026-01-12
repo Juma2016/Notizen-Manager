@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Notes Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Notes Manager</h1>
+
+      <div class="toolbar">
+        <input id="searchInput" data-testid="search" type="search"
+               placeholder="Search (title or content)..." />
+        <button id="addNoteBtn" data-testid="add-note" class="primary">+ New Note</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Error Banner (JSON/Load errors) -->
+    <section id="errorBanner" class="banner hidden" role="alert">
+      <div>
+        <strong>Error:</strong>
+        <span id="errorText">Could not load data.</span>
+      </div>
+      <button id="retryBtn" data-testid="retry" class="link">Reload</button>
+    </section>
+
+    <section class="row">
+      <h2 class="section-title">Notebooks</h2>
+      <div id="notebookGrid" data-testid="notebook-grid" class="grid"></div>
+    </section>
+
+    <section id="notesSection" class="row hidden">
+      <div class="notes-head">
+        <h2 class="section-title">
+          Notes in: <span id="selectedNotebookName"></span>
+        </h2>
+        <button id="backBtn" class="link">← Back</button>
+      </div>
+
+      <div id="emptyState" class="empty hidden" data-testid="empty-state">
+        <p>No notes available.</p>
+        <button id="emptyAddBtn" class="primary">Create a note now</button>
+      </div>
+
+      <div id="notesList" data-testid="notes-list" class="notes"></div>
+    </section>
+  </main>
+
+  <!-- Modal (Create/Edit Note) -->
+  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Note</h2>
+
+      <form id="noteForm" novalidate>
+        <div class="form-row">
+          <label for="noteTitle">Title*</label>
+          <input id="noteTitle" name="title" data-testid="note-title"
+                 type="text" required minlength="2" maxlength="60"
+                 placeholder="e.g., Shopping list" />
+          <small class="field-error hidden" data-testid="err-title"></small>
+        </div>
+
+        <div class="form-row">
+          <label for="noteContent">Content*</label>
+          <textarea id="noteContent" name="content" data-testid="note-content"
+                    required minlength="2" maxlength="500"
+                    placeholder="Write your note..."></textarea>
+          <small class="field-error hidden" data-testid="err-content"></small>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="cancelBtn" class="link">Cancel</button>
+          <button type="submit" id="saveBtn" data-testid="save-note" class="primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>
