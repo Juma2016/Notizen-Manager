@@ -76,3 +76,78 @@ async function loadNotebooksFromServer() {
     .filter(x => x && typeof x.id === "string" && typeof x.title === "string")
     .map(x => ({ id: x.id, title: x.title }));
 }
+function renderNotebooks() {
+  const term = (searchInput.value || "").toLowerCase().trim();
+
+  const filtered = notebooks.filter(nb =>
+    nb.title.toLowerCase().includes(term)
+  );
+
+  notebookGrid.innerHTML = "";
+
+  filtered.forEach(nb => {
+    const count = notes.filter(n => n.notebookId === nb.id).length;
+
+    const card = document.createElement("div");
+    card.className = "card" + (nb.id === selectedNotebookId ? " selected" : "");
+    card.dataset.id = nb.id;
+
+    card.innerHTML = `
+      <div class="card-head">
+        <h3 class="card-title">${nb.title}</h3>
+        <span class="badge">${count} notes</span>
+      </div>
+      <div class="card-actions">
+        <button class="link open">Open</button>
+      </div>
+    `;
+
+    notebookGrid.appendChild(card);
+  });
+}
+
+function renderNotes() {
+  if (!selectedNotebookId) {
+    hide(notesSection);
+    return;
+  }
+  show(notesSection);
+
+  const nb = notebooks.find(x => x.id === selectedNotebookId);
+  selectedNotebookName.textContent = nb ? nb.title : "Unknown";
+
+  const term = (searchInput.value || "").toLowerCase().trim();
+
+  const list = notes
+    .filter(n => n.notebookId === selectedNotebookId)
+    .filter(n => {
+      if (!term) return true;
+      return (n.title + " " + n.content).toLowerCase().includes(term);
+    })
+    .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+
+  notesList.innerHTML = "";
+
+  if (list.length === 0) show(emptyState);
+  else hide(emptyState);
+
+  list.forEach(n => {
+    const div = document.createElement("div");
+    div.className = "note";
+    div.dataset.id = n.id;
+
+    div.innerHTML = `
+      <div class="meta">
+        <h3>${escapeHtml(n.title)}</h3>
+        <div>
+          <button class="link icon edit">✎</button>
+          <button class="danger icon delete">🗑</button>
+        </div>
+      </div>
+      <p>${escapeHtml(n.content)}</p>
+    `;
+
+    notesList.appendChild(div);
+  });
+}
+
