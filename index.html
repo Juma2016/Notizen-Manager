@@ -25,10 +25,19 @@
       <button id="retryButton">Retry</button>
     </div>
 
-
     <section id="notebooksSection">
       <h2>Notebooks</h2>
-      <div id="notebooksGrid" class="grid"></div>
+      <div class="notebook-selector">
+        <select id="notebookDropdown" class="notebook-dropdown">
+          <option value="">Select a notebook...</option>
+        </select>
+        <div id="notebookInfo" class="notebook-info hidden">
+          <div class="notebook-details">
+            <h3 id="selectedNotebookName">Notebook Name</h3>
+            <p class="last-updated">Last updated: <span id="selectedNotebookDate">-</span></p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <div class="central-actions">
@@ -43,6 +52,7 @@
         <h2>Notes in: <span id="notebookName"></span></h2>
         <div>
           <button id="backButton">← Back to Notebooks</button>
+          <button id="cancelEditButton" class="cancel-button hidden">Cancel</button>
           <button id="addNoteInSection" class="main-button">+ Add Note</button>
         </div>
       </div>

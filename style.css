@@ -72,6 +72,17 @@ button:hover {
   background: linear-gradient(135deg, #2f6ef0, #4f8cff);
 }
 
+/* Cancel Button */
+.cancel-button {
+  background: #2a3347;
+  border: 1px solid #4f8cff;
+  color: #e8eefc;
+}
+
+.cancel-button:hover {
+  background: #3a4457;
+}
+
 /* Central Button */
 .central-actions {
   text-align: center;
@@ -86,25 +97,51 @@ button:hover {
   font-size: 18px;
 }
 
-/* Notebooks Grid */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
+/* Notebook Selector */
+.notebook-selector {
   margin-top: 20px;
+  max-width: 600px;
 }
 
-.notebook-card {
+.notebook-dropdown {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #2a3347;
+  border-radius: 12px;
+  background: #151922;
+  color: #e8eefc;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.notebook-dropdown:focus {
+  border-color: #4f8cff;
+  outline: none;
+}
+
+.notebook-dropdown option {
+  background: #151922;
+  color: #e8eefc;
+  padding: 10px;
+}
+
+.notebook-info {
+  margin-top: 20px;
   background: #151922;
   border: 1px solid #2a3347;
   border-radius: 14px;
   padding: 20px;
-  cursor: pointer;
 }
 
-.notebook-card:hover {
-  border-color: #4f8cff;
-  transform: translateY(-5px);
+.notebook-details h3 {
+  color: #e8eefc;
+  margin-bottom: 8px;
+  font-size: 20px;
+}
+
+.last-updated {
+  color: #8a94ad;
+  font-size: 14px;
 }
 
 /* Notes Section */
@@ -131,6 +168,40 @@ button:hover {
 
 .note-item:hover {
   border-color: #4f8cff;
+}
+
+/* Note Header and Actions */
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.note-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.note-actions button {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.edit-note {
+  background: #2a3347;
+  border: 1px solid #4f8cff;
+}
+
+.delete-note {
+  background: #5a1e1e;
+  border: 1px solid #ff4d4d;
+  color: #ff9999;
+}
+
+.delete-note:hover {
+  background: #6a2e2e;
 }
 
 /* Modal */
@@ -223,7 +294,10 @@ button:hover {
     width: 100%;
   }
 
-  .grid,
+  .notebook-selector {
+    max-width: 100%;
+  }
+
   #notesList {
     grid-template-columns: 1fr;
   }
@@ -235,5 +309,14 @@ button:hover {
 
   .modal-box {
     padding: 20px;
+  }
+
+  .note-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .note-actions {
+    align-self: flex-start;
   }
 }
