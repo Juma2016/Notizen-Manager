@@ -151,3 +151,173 @@ function renderNotes() {
   });
 }
 
+
+
+
+
+
+function renderAll() {
+  renderNotebooks();
+  renderNotes();
+}
+
+function openModalCreate() {
+  editingNoteId = null;
+  modalTitle.textContent = "New Note";
+  noteTitle.value = "";
+  noteContent.value = "";
+  show(modalBackdrop);
+  noteTitle.focus();
+}
+
+function openModalEdit(note) {
+  editingNoteId = note.id;
+  modalTitle.textContent = "Edit Note";
+  noteTitle.value = note.title;
+  noteContent.value = note.content;
+  show(modalBackdrop);
+  noteTitle.focus();
+}
+
+function closeModal() {
+  hide(modalBackdrop);
+  editingNoteId = null;
+}
+
+function createNote(title, content) {
+  notes.push({
+    id: "n-" + Date.now(),
+    notebookId: selectedNotebookId,
+    title,
+    content,
+    updatedAt: now()
+  });
+  saveNotes();
+  toast("Created");
+  renderAll();
+}
+
+function updateNote(id, title, content) {
+  const n = notes.find(x => x.id === id);
+  if (!n) return;
+  n.title = title;
+  n.content = content;
+  n.updatedAt = now();
+  saveNotes();
+  toast("Updated");
+  renderAll();
+}
+
+function deleteNote(id) {
+  if (!confirm("Delete note?")) return;
+  notes = notes.filter(n => n.id !== id);
+  saveNotes();
+  toast("Deleted");
+  renderAll();
+}
+
+retryBtn.addEventListener("click", init);
+
+searchInput.addEventListener("input", () => {
+  renderAll();
+});
+
+notebookGrid.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (!card) return;
+  selectedNotebookId = card.dataset.id;
+  renderAll();
+});
+
+backBtn.addEventListener("click", () => {
+  selectedNotebookId = null;
+  renderAll();
+});
+
+addNoteBtn.addEventListener("click", openModalCreate);
+emptyAddBtn.addEventListener("click", openModalCreate);
+
+cancelBtn.addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", (e) => {
+  if (e.target === modalBackdrop) closeModal();
+});
+
+noteForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const t = noteTitle.value.trim();
+  const c = noteContent.value.trim();
+
+  if (t.length < 2 || c.length < 2) {
+    alert("Please write title and content (at least 2 chars).");
+    return;
+  }
+
+  if (!selectedNotebookId) {
+    alert("Please select a notebook first.");
+    return;
+  }
+
+  if (editingNoteId) updateNote(editingNoteId, t, c);
+  else createNote(t, c);
+
+  closeModal();
+});
+
+notesList.addEventListener("click", (e) => {
+  const noteEl = e.target.closest(".note");
+  if (!noteEl) return;
+
+  const id = noteEl.dataset.id;
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  if (e.target.classList.contains("edit")) {
+    openModalEdit(note);
+  }
+
+  if (e.target.classList.contains("delete")) {
+    deleteNote(id);
+  }
+});
+
+function showError(msg) {
+  errorText.textContent = msg;
+  show(errorBanner);
+}
+
+function hideError() {
+  hide(errorBanner);
+  errorText.textContent = "";
+}
+
+async function init() {
+  try {
+    hideError();
+
+    notes = loadNotes();
+
+    notebooks = await loadNotebooksFromServer();
+
+    selectedNotebookId = null;
+
+    renderAll();
+  } catch (err) {
+    showError("Failed to load notebooks from server. Click retry.");
+    notebookGrid.innerHTML = "";
+    hide(notesSection);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+init();
+
+
