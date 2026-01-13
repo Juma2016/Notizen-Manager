@@ -4,6 +4,8 @@ const STORAGE_KEY = "my_notes_v1";
 const API_URL = "/api/notebooks";
 
 
+const toastEl = document.getElementById("toast");
+
 
 let notebooks = [];
 let selectedNotebook = null;
@@ -15,4 +17,10 @@ function show(el){
 }
 function hide(el){
   el.classList.add("hidden");
+}
+
+function toast(msg) {
+  toastEl.textContent = msg;
+  show(toastEl);
+  setTimeout(() => hide(toastEl), 1200);
 }
