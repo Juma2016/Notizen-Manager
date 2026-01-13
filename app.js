@@ -1,360 +1,299 @@
-// app.js — Sprint 1 DoD compliant
-// Single-file frontend logic (no dead buttons, validation, error UI, persistence)
+const KEY = "notes_manager_v1";
 
-const STORAGE_KEY = "notes_manager_state_v1";
+const notebookGrid = document.getElementById("notebookGrid");
+const notesSection = document.getElementById("notesSection");
+const notesList = document.getElementById("notesList");
+const selectedNotebookName = document.getElementById("selectedNotebookName");
+const emptyState = document.getElementById("emptyState");
 
-let state = null;
-let editingNoteId = null;
+const searchInput = document.getElementById("searchInput");
+const addNoteBtn = document.getElementById("addNoteBtn");
+const emptyAddBtn = document.getElementById("emptyAddBtn");
+const backBtn = document.getElementById("backBtn");
 
-// ===== DOM =====
-const notebookGrid = document.querySelector("#notebookGrid");
-const notesSection = document.querySelector("#notesSection");
-const notesList = document.querySelector("#notesList");
-const selectedNotebookName = document.querySelector("#selectedNotebookName");
-const emptyState = document.querySelector("#emptyState");
-
-const searchInput = document.querySelector("#searchInput");
-const addNoteBtn = document.querySelector("#addNoteBtn");
-const emptyAddBtn = document.querySelector("#emptyAddBtn");
-const backBtn = document.querySelector("#backBtn");
-
-// modal
-const modalBackdrop = document.querySelector("#modalBackdrop");
-const noteForm = document.querySelector("#noteForm");
-const noteTitle = document.querySelector("#noteTitle");
-const noteContent = document.querySelector("#noteContent");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const noteForm = document.getElementById("noteForm");
+const noteTitle = document.getElementById("noteTitle");
+const noteContent = document.getElementById("noteContent");
 const errTitle = document.querySelector('[data-testid="err-title"]');
 const errContent = document.querySelector('[data-testid="err-content"]');
-const cancelBtn = document.querySelector("#cancelBtn");
+const cancelBtn = document.getElementById("cancelBtn");
 
-// error banner
-const errorBanner = document.querySelector("#errorBanner");
-const errorText = document.querySelector("#errorText");
-const retryBtn = document.querySelector("#retryBtn");
+const errorBanner = document.getElementById("errorBanner");
+const errorText = document.getElementById("errorText");
+const retryBtn = document.getElementById("retryBtn");
 
-// toast
-const toastEl = document.querySelector("#toast");
+const toastEl = document.getElementById("toast");
 
-// ===== Utils =====
+let data = null;
+let selectedNotebookId = null;
+let editingNoteId = null;
+
 function show(el) { el.classList.remove("hidden"); }
 function hide(el) { el.classList.add("hidden"); }
-
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function preview(text, max = 110) {
-  const t = (text ?? "").trim();
-  return t.length <= max ? t : t.slice(0, max - 1) + "…";
-}
-
-function uid(prefix = "id") {
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-function now() { return Date.now(); }
 
 function toast(msg) {
   toastEl.textContent = msg;
   show(toastEl);
-  setTimeout(() => hide(toastEl), 1400);
+  setTimeout(() => hide(toastEl), 1200);
 }
 
-function showError(msg) {
-  errorText.textContent = msg;
-  show(errorBanner);
-}
-function hideError() {
-  hide(errorBanner);
+function save() {
+  localStorage.setItem(KEY, JSON.stringify({ data, selectedNotebookId }));
 }
 
-// ===== Storage =====
-function safeParse(raw) {
+function load() {
+  const raw = localStorage.getItem(KEY);
+  if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  const parsed = safeParse(raw);
-  if (!parsed) {
-    localStorage.removeItem(STORAGE_KEY);
-    return null;
+function defaultData() {
+  const nbId = "nb-1";
+  return {
+    notebooks: [{ id: nbId, name: "My Notebook" }],
+    notes: [{ id: "n-1", notebookId: nbId, title: "Welcome", content: "This is your first note!" }]
+  };
+}
+
+async function loadSeedOrDefault() {
+  try {
+    const res = await fetch("./seed.json");
+    if (!res.ok) return defaultData();
+    const json = await res.json();
+    if (!Array.isArray(json.notebooks) || !Array.isArray(json.notes)) return defaultData();
+    return json;
+  } catch {
+    return defaultData();
   }
-  return parsed;
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function clearErrors() {
+  hide(errorBanner);
+  errTitle.textContent = ""; hide(errTitle);
+  errContent.textContent = ""; hide(errContent);
 }
 
-function ensureShape(s) {
-  if (!s || typeof s !== "object") return null;
-  if (!Array.isArray(s.notebooks)) return null;
-  if (!Array.isArray(s.notes)) return null;
-  if (!s.ui || typeof s.ui !== "object") s.ui = {};
-  if (!("selectedNotebookId" in s.ui)) s.ui.selectedNotebookId = null;
-  return s;
-}
-
-async function loadSeedOrThrow() {
-  // seed.json must be next to index.html
-  const res = await fetch("./seed.json", { cache: "no-store" });
-  if (!res.ok) throw new Error(`Could not load seed.json (${res.status})`);
-  const data = await res.json();
-  const shaped = ensureShape(data);
-  if (!shaped) throw new Error("seed.json has an invalid structure.");
-  return shaped;
-}
-
-// ===== Render =====
-function renderNotebooks() {
-  const term = (searchInput.value || "").trim().toLowerCase();
-
-  const items = state.notebooks
-    .map(nb => {
-      const notes = state.notes
-        .filter(n => n.notebookId === nb.id)
-        .sort((a, b) => b.updatedAt - a.updatedAt);
-
-      const last = notes[0];
-      const pv = last ? preview(`${last.title}: ${last.content}`, 110) : "No notes yet…";
-      return { ...nb, count: notes.length, pv };
-    })
-    .filter(nb =>
-      nb.name.toLowerCase().includes(term) ||
-      nb.pv.toLowerCase().includes(term)
-    );
-
-  notebookGrid.innerHTML = items.map(nb => `
-    <article class="card ${state.ui.selectedNotebookId === nb.id ? "selected" : ""}"
-             data-notebook-id="${nb.id}">
-      <div class="card-head">
-        <h3 class="card-title">${escapeHtml(nb.name)}</h3>
-        <span class="badge">${nb.count} notes</span>
-      </div>
-      <p class="preview">${escapeHtml(nb.pv)}</p>
-      <div class="card-actions">
-        <button class="link open-notes">Open</button>
-        <button class="danger icon delete-notebook" title="Delete notebook">🗑</button>
-      </div>
-    </article>
-  `).join("");
-}
-
-function renderNotes() {
-  const nbId = state.ui.selectedNotebookId;
-  if (!nbId) return;
-
-  const term = (searchInput.value || "").trim().toLowerCase();
-
-  const notes = state.notes
-    .filter(n => n.notebookId === nbId)
-    .filter(n => (n.title + " " + n.content).toLowerCase().includes(term))
-    .sort((a, b) => b.updatedAt - a.updatedAt);
-
-  notesList.innerHTML = notes.map(n => `
-    <article class="note" data-note-id="${n.id}">
-      <div class="meta">
-        <h3>${escapeHtml(n.title)}</h3>
-        <div>
-          <button class="link icon edit-note" title="Edit">✎</button>
-          <button class="danger icon delete-note" title="Delete">🗑</button>
-        </div>
-      </div>
-      <p>${escapeHtml(preview(n.content, 140))}</p>
-    </article>
-  `).join("");
-
-  notes.length === 0 ? show(emptyState) : hide(emptyState);
-}
-
-function openNotebook(notebookId, scroll = true) {
-  state.ui.selectedNotebookId = notebookId;
-  saveState();
-
-  const nb = state.notebooks.find(n => n.id === notebookId);
-  selectedNotebookName.textContent = nb ? nb.name : "";
-
-  show(notesSection);
-  renderNotes();
-  renderNotebooks();
-
-  if (scroll) notesSection.scrollIntoView({ behavior: "smooth" });
-}
-
-function renderAll() {
-  renderNotebooks();
-  state.ui.selectedNotebookId ? openNotebook(state.ui.selectedNotebookId, false)
-                              : hide(notesSection);
-}
-
-// ===== Modal / Validation =====
-function clearValidation() {
-  errTitle.textContent = "";
-  errContent.textContent = "";
-  hide(errTitle); hide(errContent);
-}
-
-function validateForm() {
-  const titleOk = noteTitle.checkValidity();
-  const contentOk = noteContent.checkValidity();
-
-  if (!titleOk) { errTitle.textContent = noteTitle.validationMessage; show(errTitle); }
-  else hide(errTitle);
-
-  if (!contentOk) { errContent.textContent = noteContent.validationMessage; show(errContent); }
-  else hide(errContent);
-
-  return titleOk && contentOk;
-}
-
-function openModal({ title = "", content = "" } = {}, noteId = null) {
+function openModal(title = "", content = "", noteId = null) {
   editingNoteId = noteId;
   noteTitle.value = title;
   noteContent.value = content;
-  clearValidation();
+  hide(errTitle); hide(errContent);
   show(modalBackdrop);
-  modalBackdrop.setAttribute("aria-hidden", "false");
   noteTitle.focus();
 }
 
 function closeModal() {
   hide(modalBackdrop);
-  modalBackdrop.setAttribute("aria-hidden", "true");
-  clearValidation();
+  editingNoteId = null;
 }
 
-function createOrUpdateNote() {
-  const nbId = state.ui.selectedNotebookId || state.notebooks[0]?.id;
-  if (!nbId) return;
+function renderNotebooks() {
+  const term = (searchInput.value || "").toLowerCase().trim();
 
+  const list = data.notebooks.filter(nb => nb.name.toLowerCase().includes(term));
+
+  notebookGrid.innerHTML = list.map(nb => {
+    const count = data.notes.filter(n => n.notebookId === nb.id).length;
+    return `
+      <div class="card ${nb.id === selectedNotebookId ? "selected" : ""}" data-id="${nb.id}">
+        <div class="card-head">
+          <h3 class="card-title">${nb.name}</h3>
+          <span class="badge">${count} notes</span>
+        </div>
+        <div class="card-actions">
+          <button class="link open">Open</button>
+          <button class="danger icon delete-notebook">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderNotes() {
+  if (!selectedNotebookId) return;
+
+  const nb = data.notebooks.find(x => x.id === selectedNotebookId);
+  selectedNotebookName.textContent = nb ? nb.name : "";
+
+  const term = (searchInput.value || "").toLowerCase().trim();
+
+  const list = data.notes
+    .filter(n => n.notebookId === selectedNotebookId)
+    .filter(n => (n.title + " " + n.content).toLowerCase().includes(term));
+
+  notesList.innerHTML = list.map(n => `
+    <div class="note" data-id="${n.id}">
+      <div class="meta">
+        <h3>${n.title}</h3>
+        <div>
+          <button class="link icon edit">✎</button>
+          <button class="danger icon delete-note">🗑</button>
+        </div>
+      </div>
+      <p>${n.content}</p>
+    </div>
+  `).join("");
+
+  if (list.length === 0) show(emptyState);
+  else hide(emptyState);
+}
+
+function renderAll() {
+  renderNotebooks();
+  if (selectedNotebookId) {
+    show(notesSection);
+    renderNotes();
+  } else {
+    hide(notesSection);
+  }
+}
+
+function selectNotebook(id) {
+  selectedNotebookId = id;
+  save();
+  renderAll();
+}
+
+function deleteNotebook(id) {
+  const nb = data.notebooks.find(x => x.id === id);
+  if (!nb) return;
+
+  if (!confirm(`Delete "${nb.name}" and all its notes?`)) return;
+
+  data.notebooks = data.notebooks.filter(x => x.id !== id);
+  data.notes = data.notes.filter(n => n.notebookId !== id);
+  selectedNotebookId = data.notebooks[0]?.id || null;
+
+  save();
+  renderAll();
+}
+
+function deleteNote(id) {
+  if (!confirm("Delete this note?")) return;
+  data.notes = data.notes.filter(n => n.id !== id);
+  save();
+  renderAll();
+}
+
+function validateForm() {
+  let ok = true;
+
+  if (noteTitle.value.trim().length < 2) {
+    errTitle.textContent = "Title must be at least 2 characters.";
+    show(errTitle);
+    ok = false;
+  } else hide(errTitle);
+
+  if (noteContent.value.trim().length < 2) {
+    errContent.textContent = "Content must be at least 2 characters.";
+    show(errContent);
+    ok = false;
+  } else hide(errContent);
+
+  return ok;
+}
+
+function saveNote() {
   const title = noteTitle.value.trim();
   const content = noteContent.value.trim();
 
+  if (!validateForm()) return;
+
+  if (!selectedNotebookId) {
+    selectedNotebookId = data.notebooks[0]?.id || null;
+    if (!selectedNotebookId) return;
+  }
+
   if (editingNoteId) {
-    const n = state.notes.find(x => x.id === editingNoteId);
-    if (n) { n.title = title; n.content = content; n.updatedAt = now(); }
+    const n = data.notes.find(x => x.id === editingNoteId);
+    if (n) { n.title = title; n.content = content; }
     toast("Note updated");
   } else {
-    state.notes.push({ id: uid("note"), notebookId: nbId, title, content, updatedAt: now() });
+    data.notes.push({
+      id: "n-" + Date.now(),
+      notebookId: selectedNotebookId,
+      title,
+      content
+    });
     toast("Note created");
   }
 
-  saveState();
+  save();
   closeModal();
-  openNotebook(nbId, false);
-}
-
-// ===== Delete =====
-function deleteNotebook(notebookId) {
-  const nb = state.notebooks.find(n => n.id === notebookId);
-  if (!nb) return;
-
-  if (!confirm(`Delete notebook "${nb.name}"? All notes inside will be deleted.`)) return;
-
-  state.notebooks = state.notebooks.filter(n => n.id !== notebookId);
-  state.notes = state.notes.filter(n => n.notebookId !== notebookId);
-  state.ui.selectedNotebookId = state.notebooks[0]?.id || null;
-
-  saveState();
   renderAll();
-  toast("Notebook deleted");
 }
 
-function deleteNote(noteId) {
-  if (!confirm("Delete this note?")) return;
-  state.notes = state.notes.filter(n => n.id !== noteId);
-  saveState();
-  renderNotes();
-  renderNotebooks();
-  toast("Note deleted");
-}
+retryBtn.addEventListener("click", init);
+searchInput.addEventListener("input", renderAll);
 
-// ===== Events =====
-retryBtn.addEventListener("click", () => init());
-
-searchInput.addEventListener("input", () => renderAll());
-
-addNoteBtn.addEventListener("click", () => {
-  if (!state.ui.selectedNotebookId)
-    state.ui.selectedNotebookId = state.notebooks[0]?.id || null;
-  openModal();
-});
-
+addNoteBtn.addEventListener("click", () => openModal());
 emptyAddBtn.addEventListener("click", () => openModal());
 
 backBtn.addEventListener("click", () => {
-  state.ui.selectedNotebookId = null;
-  saveState();
-  hide(notesSection);
-  renderNotebooks();
+  selectedNotebookId = null;
+  save();
+  renderAll();
 });
 
 cancelBtn.addEventListener("click", closeModal);
 
-// close modal by backdrop or ESC
-modalBackdrop.addEventListener("click", e => { if (e.target === modalBackdrop) closeModal(); });
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && !modalBackdrop.classList.contains("hidden")) closeModal();
-});
-
-noteForm.addEventListener("submit", e => {
+noteForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (!validateForm()) return;
-  createOrUpdateNote();
+  saveNote();
 });
 
-notebookGrid.addEventListener("click", e => {
+notebookGrid.addEventListener("click", (e) => {
   const card = e.target.closest(".card");
   if (!card) return;
-  const id = card.dataset.notebookId;
 
-  if (e.target.closest(".delete-notebook")) {
-    e.stopPropagation();
+  const id = card.dataset.id;
+
+  if (e.target.classList.contains("delete-notebook")) {
     deleteNotebook(id);
     return;
   }
-  openNotebook(id);
+  selectNotebook(id);
 });
 
-notesList.addEventListener("click", e => {
-  const noteEl = e.target.closest(".note");
-  if (!noteEl) return;
-  const noteId = noteEl.dataset.noteId;
+notesList.addEventListener("click", (e) => {
+  const item = e.target.closest(".note");
+  if (!item) return;
 
-  if (e.target.closest(".edit-note")) {
-    e.stopPropagation();
-    const n = state.notes.find(x => x.id === noteId);
-    if (n) openModal({ title: n.title, content: n.content }, noteId);
-    return;
+  const id = item.dataset.id;
+
+  if (e.target.classList.contains("edit")) {
+    const n = data.notes.find(x => x.id === id);
+    if (n) openModal(n.title, n.content, id);
   }
-  if (e.target.closest(".delete-note")) {
-    e.stopPropagation();
-    deleteNote(noteId);
+
+  if (e.target.classList.contains("delete-note")) {
+    deleteNote(id);
   }
 });
 
-// ===== Init =====
+modalBackdrop.addEventListener("click", (e) => {
+  if (e.target === modalBackdrop) closeModal();
+});
+
 async function init() {
   try {
-    hideError();
-    state = ensureShape(loadState());
-    if (!state) {
-      state = await loadSeedOrThrow();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    clearErrors();
+
+    const saved = load();
+    if (saved && saved.data) {
+      data = saved.data;
+      selectedNotebookId = saved.selectedNotebookId || null;
+    } else {
+      data = await loadSeedOrDefault();
+      selectedNotebookId = data.notebooks[0]?.id || null;
+      save();
     }
-    if (state.ui.selectedNotebookId &&
-        !state.notebooks.some(n => n.id === state.ui.selectedNotebookId)) {
-      state.ui.selectedNotebookId = state.notebooks[0]?.id || null;
-      saveState();
-    }
+
     renderAll();
-  } catch (err) {
-    showError(err?.message || "Could not load data.");
+  } catch {
+    errorText.textContent = "Could not load data.";
+    show(errorBanner);
   }
 }
 
