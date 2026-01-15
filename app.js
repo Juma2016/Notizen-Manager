@@ -1,17 +1,18 @@
-
-const STORAGE_KEY = "my_notes_v1";
-
-const API_URL = "/api/notebooks";
-
 const notebookGrid = document.getElementById("notebookGrid");
+
 const notesSection = document.getElementById("notesSection");
-const notesList = document.getElementById("notesList");
 const selectedNotebookName = document.getElementById("selectedNotebookName");
+const notesList = document.getElementById("notesList");
 const emptyState = document.getElementById("emptyState");
+
 const searchInput = document.getElementById("searchInput");
 const addNoteBtn = document.getElementById("addNoteBtn");
 const emptyAddBtn = document.getElementById("emptyAddBtn");
 const backBtn = document.getElementById("backBtn");
+
+const errorBanner = document.getElementById("errorBanner");
+const errorText = document.getElementById("errorText");
+const retryBtn = document.getElementById("retryBtn");
 
 const modalBackdrop = document.getElementById("modalBackdrop");
 const modalTitle = document.getElementById("modalTitle");
@@ -20,304 +21,293 @@ const noteTitle = document.getElementById("noteTitle");
 const noteContent = document.getElementById("noteContent");
 const cancelBtn = document.getElementById("cancelBtn");
 
-const errorBanner = document.getElementById("errorBanner");
-const errorText = document.getElementById("errorText");
-const retryBtn = document.getElementById("retryBtn");
+const errTitle = document.querySelector('[data-testid="err-title"]');
+const errContent = document.querySelector('[data-testid="err-content"]');
 
-const toastEl = document.getElementById("toast");
+const toast = document.getElementById("toast");
+
+let notebooks = [];           
+let selectedNotebookId = null;  
+let editingNoteId = null;        
+let searchText = "";             
+
+const STORAGE_KEY = "notes_manager_notes";
 
 
-let notebooks = [];
-let selectedNotebook = null;
-let notes = [];
-let editingNoteId = null;
-
-function show(el){
-  el.classList.remove("hidden");
-}
-function hide(el){
-  el.classList.add("hidden");
-}
-
-function toast(msg) {
-  toastEl.textContent = msg;
-  show(toastEl);
-  setTimeout(() => hide(toastEl), 1200);
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.remove("hidden");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.add("hidden"), 1500);
 }
 
-function now() {
-  return new Date().toISOString();
+function showError(msg) {
+  errorText.textContent = msg || "Could not load data.";
+  errorBanner.classList.remove("hidden");
 }
 
-function loadNotes() {
+function hideError() {
+  errorBanner.classList.add("hidden");
+}
+
+function openModal(isEdit) {
+  modalTitle.textContent = isEdit ? "Edit Note" : "New Note";
+  modalBackdrop.classList.remove("hidden");
+  modalBackdrop.setAttribute("aria-hidden", "false");
+  noteTitle.focus();
+}
+
+function closeModal() {
+  modalBackdrop.classList.add("hidden");
+  modalBackdrop.setAttribute("aria-hidden", "true");
+  noteForm.reset();
+  editingNoteId = null;
+  clearValidation();
+}
+
+function clearValidation() {
+  errTitle.classList.add("hidden");
+  errTitle.textContent = "";
+  errContent.classList.add("hidden");
+  errContent.textContent = "";
+}
+
+function formatDate(ms) {
+  return new Date(ms).toLocaleString();
+}
+
+function makeId() {
+  return Date.now().toString();
+}
+
+
+function loadAllNotes() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
-    const arr = JSON.parse(raw);
-    if (Array.isArray(arr)) return arr;
-    return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function saveNotes() {
+function saveAllNotes(notes) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
 }
 
-async function loadNotebooksFromServer() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("API failed");
-  const data = await res.json();
-
-  if (!Array.isArray(data)) throw new Error("Bad JSON");
-
-  return data
-    .filter(x => x && typeof x.id === "string" && typeof x.title === "string")
-    .map(x => ({ id: x.id, title: x.title }));
+function getNotesForSelectedNotebook() {
+  const all = loadAllNotes();
+  return all
+    .filter(n => n.notebookId === selectedNotebookId)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
+
+async function loadNotebooks() {
+  hideError();
+
+  const urls = ["/api/notebooks", "/notebooks.json", "/backend/notebooks.json"];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("bad response");
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error("not array");
+
+      notebooks = data;
+      renderNotebooks();
+      return;
+    } catch (e) {
+    }
+  }
+
+  showError("Failed to load notebooks.json. Click Reload.");
+}
+
+
 function renderNotebooks() {
-  const term = (searchInput.value || "").toLowerCase().trim();
-
-  const filtered = notebooks.filter(nb =>
-    nb.title.toLowerCase().includes(term)
-  );
-
   notebookGrid.innerHTML = "";
 
-  filtered.forEach(nb => {
-    const count = notes.filter(n => n.notebookId === nb.id).length;
-
+  notebooks.forEach(nb => {
     const card = document.createElement("div");
-    card.className = "card" + (nb.id === selectedNotebookId ? " selected" : "");
-    card.dataset.id = nb.id;
-
+    card.className = "card";
     card.innerHTML = `
       <div class="card-head">
         <h3 class="card-title">${nb.title}</h3>
-        <span class="badge">${count} notes</span>
+        <span class="badge">open</span>
       </div>
+      <p class="preview">Click to view notes</p>
       <div class="card-actions">
-        <button class="link open">Open</button>
+        <span class="badge">ID: ${nb.id}</span>
+        <span class="icon">→</span>
       </div>
     `;
+
+    card.addEventListener("click", () => {
+      selectedNotebookId = nb.id;
+      selectedNotebookName.textContent = nb.title;
+      notesSection.classList.remove("hidden");
+      searchInput.value = "";
+      searchText = "";
+      renderNotes();
+    });
 
     notebookGrid.appendChild(card);
   });
 }
 
 function renderNotes() {
-  if (!selectedNotebookId) {
-    hide(notesSection);
-    return;
+  if (!selectedNotebookId) return;
+
+  let notes = getNotesForSelectedNotebook();
+
+  const q = searchText.trim().toLowerCase();
+  if (q) {
+    notes = notes.filter(n => {
+      return (
+        (n.title || "").toLowerCase().includes(q) ||
+        (n.content || "").toLowerCase().includes(q)
+      );
+    });
   }
-  show(notesSection);
-
-  const nb = notebooks.find(x => x.id === selectedNotebookId);
-  selectedNotebookName.textContent = nb ? nb.title : "Unknown";
-
-  const term = (searchInput.value || "").toLowerCase().trim();
-
-  const list = notes
-    .filter(n => n.notebookId === selectedNotebookId)
-    .filter(n => {
-      if (!term) return true;
-      return (n.title + " " + n.content).toLowerCase().includes(term);
-    })
-    .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
 
   notesList.innerHTML = "";
 
-  if (list.length === 0) show(emptyState);
-  else hide(emptyState);
+  if (notes.length === 0) {
+    emptyState.classList.remove("hidden");
+  } else {
+    emptyState.classList.add("hidden");
+  }
 
-  list.forEach(n => {
+  notes.forEach(note => {
     const div = document.createElement("div");
     div.className = "note";
-    div.dataset.id = n.id;
-
     div.innerHTML = `
       <div class="meta">
-        <h3>${escapeHtml(n.title)}</h3>
-        <div>
-          <button class="link icon edit">✎</button>
-          <button class="danger icon delete">🗑</button>
-        </div>
+        <h3>${note.title}</h3>
+        <span class="badge">${formatDate(note.updatedAt)}</span>
       </div>
-      <p>${escapeHtml(n.content)}</p>
+      <p>${note.content}</p>
+      <div class="card-actions" style="margin-top:10px;">
+        <button class="link" data-action="edit">Edit</button>
+        <button class="danger" data-action="delete">Delete</button>
+      </div>
     `;
+
+    div.querySelector('[data-action="edit"]').addEventListener("click", () => {
+      editingNoteId = note.id;
+      noteTitle.value = note.title;
+      noteContent.value = note.content;
+      openModal(true);
+    });
+
+    div.querySelector('[data-action="delete"]').addEventListener("click", () => {
+      const ok = confirm("Delete this note?");
+      if (!ok) return;
+
+      const all = loadAllNotes();
+      const newAll = all.filter(n => n.id !== note.id);
+      saveAllNotes(newAll);
+
+      renderNotes();
+      showToast("Deleted");
+    });
 
     notesList.appendChild(div);
   });
 }
 
 
+noteForm.addEventListener("submit", (e) => {
+  e.preventDefault();
 
+  clearValidation();
 
+  const title = noteTitle.value.trim();
+  const content = noteContent.value.trim();
 
+  let ok = true;
+  if (title.length < 2) {
+    errTitle.textContent = "Title must be at least 2 characters.";
+    errTitle.classList.remove("hidden");
+    ok = false;
+  }
+  if (content.length < 2) {
+    errContent.textContent = "Content must be at least 2 characters.";
+    errContent.classList.remove("hidden");
+    ok = false;
+  }
+  if (!ok) return;
 
-function renderAll() {
-  renderNotebooks();
+  const all = loadAllNotes();
+  const now = Date.now();
+
+  if (editingNoteId) {
+    const idx = all.findIndex(n => n.id === editingNoteId);
+    if (idx !== -1) {
+      all[idx].title = title;
+      all[idx].content = content;
+      all[idx].updatedAt = now; 
+    }
+    saveAllNotes(all);
+    showToast("Updated");
+  } else {
+    const newNote = {
+      id: makeId(),
+      notebookId: selectedNotebookId,
+      title,
+      content,
+      updatedAt: now
+    };
+    all.push(newNote);
+    saveAllNotes(all);
+    showToast("Saved");
+  }
+
+  closeModal();
   renderNotes();
-}
-
-function openModalCreate() {
-  editingNoteId = null;
-  modalTitle.textContent = "New Note";
-  noteTitle.value = "";
-  noteContent.value = "";
-  show(modalBackdrop);
-  noteTitle.focus();
-}
-
-function openModalEdit(note) {
-  editingNoteId = note.id;
-  modalTitle.textContent = "Edit Note";
-  noteTitle.value = note.title;
-  noteContent.value = note.content;
-  show(modalBackdrop);
-  noteTitle.focus();
-}
-
-function closeModal() {
-  hide(modalBackdrop);
-  editingNoteId = null;
-}
-
-function createNote(title, content) {
-  notes.push({
-    id: "n-" + Date.now(),
-    notebookId: selectedNotebookId,
-    title,
-    content,
-    updatedAt: now()
-  });
-  saveNotes();
-  toast("Created");
-  renderAll();
-}
-
-function updateNote(id, title, content) {
-  const n = notes.find(x => x.id === id);
-  if (!n) return;
-  n.title = title;
-  n.content = content;
-  n.updatedAt = now();
-  saveNotes();
-  toast("Updated");
-  renderAll();
-}
-
-function deleteNote(id) {
-  if (!confirm("Delete note?")) return;
-  notes = notes.filter(n => n.id !== id);
-  saveNotes();
-  toast("Deleted");
-  renderAll();
-}
-
-retryBtn.addEventListener("click", init);
-
-searchInput.addEventListener("input", () => {
-  renderAll();
 });
 
-notebookGrid.addEventListener("click", (e) => {
-  const card = e.target.closest(".card");
-  if (!card) return;
-  selectedNotebookId = card.dataset.id;
-  renderAll();
+searchInput.addEventListener("input", (e) => {
+  searchText = e.target.value;
+  renderNotes();
+});
+
+addNoteBtn.addEventListener("click", () => {
+  if (!selectedNotebookId) {
+    showToast("Select a notebook first");
+    return;
+  }
+  editingNoteId = null;
+  noteForm.reset();
+  openModal(false);
+});
+
+emptyAddBtn.addEventListener("click", () => {
+  if (!selectedNotebookId) return;
+  editingNoteId = null;
+  noteForm.reset();
+  openModal(false);
 });
 
 backBtn.addEventListener("click", () => {
+  notesSection.classList.add("hidden");
   selectedNotebookId = null;
-  renderAll();
 });
 
-addNoteBtn.addEventListener("click", openModalCreate);
-emptyAddBtn.addEventListener("click", openModalCreate);
-
 cancelBtn.addEventListener("click", closeModal);
+
+retryBtn.addEventListener("click", loadNotebooks);
+
 modalBackdrop.addEventListener("click", (e) => {
   if (e.target === modalBackdrop) closeModal();
 });
 
-noteForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const t = noteTitle.value.trim();
-  const c = noteContent.value.trim();
-
-  if (t.length < 2 || c.length < 2) {
-    alert("Please write title and content (at least 2 chars).");
-    return;
-  }
-
-  if (!selectedNotebookId) {
-    alert("Please select a notebook first.");
-    return;
-  }
-
-  if (editingNoteId) updateNote(editingNoteId, t, c);
-  else createNote(t, c);
-
-  closeModal();
-});
-
-notesList.addEventListener("click", (e) => {
-  const noteEl = e.target.closest(".note");
-  if (!noteEl) return;
-
-  const id = noteEl.dataset.id;
-  const note = notes.find(n => n.id === id);
-  if (!note) return;
-
-  if (e.target.classList.contains("edit")) {
-    openModalEdit(note);
-  }
-
-  if (e.target.classList.contains("delete")) {
-    deleteNote(id);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modalBackdrop.classList.contains("hidden")) {
+    closeModal();
   }
 });
 
-function showError(msg) {
-  errorText.textContent = msg;
-  show(errorBanner);
-}
-
-function hideError() {
-  hide(errorBanner);
-  errorText.textContent = "";
-}
-
-async function init() {
-  try {
-    hideError();
-
-    notes = loadNotes();
-
-    notebooks = await loadNotebooksFromServer();
-
-    selectedNotebookId = null;
-
-    renderAll();
-  } catch (err) {
-    showError("Failed to load notebooks from server. Click retry.");
-    notebookGrid.innerHTML = "";
-    hide(notesSection);
-  }
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-init();
-
-
+loadNotebooks();
