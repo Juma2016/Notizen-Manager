@@ -2,7 +2,6 @@ const notebookDropdown = document.getElementById("notebookDropdown");
 const notesSection = document.getElementById("notesSection");
 const notesList = document.getElementById("notesList");
 const notebookName = document.getElementById("notebookName");
-const addNoteBtn = document.getElementById("addNote");
 const addNoteInSection = document.getElementById("addNoteInSection");
 const modal = document.getElementById("modal");
 const noteForm = document.getElementById("noteForm");
@@ -16,7 +15,6 @@ let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
 
-/* تحميل notebooks */
 fetch("/backend/notebooks.json")
   .then(res => res.json())
   .then(data => {
@@ -34,7 +32,6 @@ function fillNotebookDropdown() {
   });
 }
 
-/* اختيار Notebook */
 notebookDropdown.addEventListener("change", () => {
   selectedNotebookId = notebookDropdown.value;
   const nb = notebooks.find(n => n.id === selectedNotebookId);
@@ -43,7 +40,6 @@ notebookDropdown.addEventListener("change", () => {
   renderNotes();
 });
 
-/* عرض الملاحظات */
 function renderNotes() {
   notesList.innerHTML = "";
 
@@ -71,8 +67,6 @@ function renderNotes() {
   });
 }
 
-/* فتح المودال */
-addNoteBtn.onclick = () => openCreate();
 addNoteInSection.onclick = () => openCreate();
 cancelButton.onclick = closeModal;
 
@@ -94,7 +88,6 @@ function closeModal() {
   modal.classList.add("hidden");
 }
 
-/* حفظ الملاحظة */
 noteForm.addEventListener("submit", e => {
   e.preventDefault();
 
@@ -120,19 +113,16 @@ noteForm.addEventListener("submit", e => {
   renderNotes();
 });
 
-/* حذف */
 function deleteNote(id) {
   notes = notes.filter(n => n.id !== id);
   saveNotes();
   renderNotes();
 }
 
-/* حفظ في localStorage */
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
 
-/* البحث */
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.toLowerCase();
   const filtered = notes.filter(n =>

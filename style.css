@@ -11,7 +11,6 @@ body {
   min-height: 100vh;
 }
 
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -320,4 +319,8 @@ button:hover {
   .note-actions {
     align-self: flex-start;
   }
+}
+
+#notesSection {
+  margin-top: 40px;
 }

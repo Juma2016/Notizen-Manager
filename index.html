@@ -26,9 +26,7 @@
     </div>
 
     <section id="notebooksSection">
-      <h2>Notebooks</h2>
       <div class="notebook-selector">
-        <label for="notebookDropdown">Select a notebook</label>
         <select id="notebookDropdown" class="notebook-dropdown">
           <option value="">Select a notebook...</option>
         </select>
@@ -41,18 +39,10 @@
       </div>
     </section>
 
-    <div class="central-actions">
-      <button id="addNote" class="main-button large-button">
-        <span class="button-icon">+</span>
-        <span class="button-text">New Note</span>
-      </button>
-    </div>
-
     <section id="notesSection" class="hidden">
       <div class="notes-header">
-        <h2>Notes in: <span id="notebookName"></span></h2>
+        <h2><span id="notebookName"></span></h2>
         <div>
-          <button id="backButton">← Back to Notebooks</button>
           <button id="cancelEditButton" class="cancel-button hidden">Cancel</button>
           <button id="addNoteInSection" class="main-button">+ Add Note</button>
         </div>
@@ -93,7 +83,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js"></script>
+  <script src="src/js/app.js"></script>
 </body>
 
 </html>
