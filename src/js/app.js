@@ -1,85 +1,58 @@
-const notebookGrid = document.getElementById("notebookGrid");
+const searchInput = document.getElementById("searchInput") || document.getElementById("search");
+const notebookSelect = document.querySelector("select");
+const notesList = document.getElementById("notesList") || document.getElementById("notes");
+const emptyState = document.getElementById("emptyState") || null;
+const addNoteBtn = document.getElementById("addNoteBtn") || document.querySelector("button");
+const modalBackdrop = document.getElementById("modalBackdrop") || null;
+const modalTitle = document.getElementById("modalTitle") || null;
+const noteForm = document.getElementById("noteForm") || document.querySelector("form");
+const noteTitle = document.getElementById("noteTitle") || document.querySelector("input");
+const noteContent = document.getElementById("noteContent") || document.querySelector("textarea");
+const cancelBtn = document.getElementById("cancelBtn") || null;
+const errTitle = document.querySelector('[data-testid="err-title"]') || null;
+const errContent = document.querySelector('[data-testid="err-content"]') || null;
+const toast = document.getElementById("toast") || null;
 
-const notesSection = document.getElementById("notesSection");
-const selectedNotebookName = document.getElementById("selectedNotebookName");
-const notesList = document.getElementById("notesList");
-const emptyState = document.getElementById("emptyState");
-
-const searchInput = document.getElementById("searchInput");
-const addNoteBtn = document.getElementById("addNoteBtn");
-const emptyAddBtn = document.getElementById("emptyAddBtn");
-const backBtn = document.getElementById("backBtn");
-
-const errorBanner = document.getElementById("errorBanner");
-const errorText = document.getElementById("errorText");
-const retryBtn = document.getElementById("retryBtn");
-
-const modalBackdrop = document.getElementById("modalBackdrop");
-const modalTitle = document.getElementById("modalTitle");
-const noteForm = document.getElementById("noteForm");
-const noteTitle = document.getElementById("noteTitle");
-const noteContent = document.getElementById("noteContent");
-const cancelBtn = document.getElementById("cancelBtn");
-
-const errTitle = document.querySelector('[data-testid="err-title"]');
-const errContent = document.querySelector('[data-testid="err-content"]');
-
-const toast = document.getElementById("toast");
-
-let notebooks = [];           
-let selectedNotebookId = null;  
-let editingNoteId = null;        
-let searchText = "";             
+let notebooks = [];
+let selectedNotebookId = "";
+let editingNoteId = null;
+let searchText = "";
 
 const STORAGE_KEY = "notes_manager_notes";
 
-
 function showToast(msg) {
+  if (!toast) return;
   toast.textContent = msg;
   toast.classList.remove("hidden");
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.add("hidden"), 1500);
 }
 
-function showError(msg) {
-  errorText.textContent = msg || "Could not load data.";
-  errorBanner.classList.remove("hidden");
-}
-
-function hideError() {
-  errorBanner.classList.add("hidden");
-}
-
 function openModal(isEdit) {
-  modalTitle.textContent = isEdit ? "Edit Note" : "New Note";
+  if (!modalBackdrop) return;
+  if (modalTitle) modalTitle.textContent = isEdit ? "Edit Note" : "New Note";
   modalBackdrop.classList.remove("hidden");
   modalBackdrop.setAttribute("aria-hidden", "false");
   noteTitle.focus();
 }
 
 function closeModal() {
+  if (!modalBackdrop) return;
   modalBackdrop.classList.add("hidden");
   modalBackdrop.setAttribute("aria-hidden", "true");
   noteForm.reset();
   editingNoteId = null;
-  clearValidation();
-}
-
-function clearValidation() {
-  errTitle.classList.add("hidden");
-  errTitle.textContent = "";
-  errContent.classList.add("hidden");
-  errContent.textContent = "";
-}
-
-function formatDate(ms) {
-  return new Date(ms).toLocaleString();
+  if (errTitle) errTitle.classList.add("hidden");
+  if (errContent) errContent.classList.add("hidden");
 }
 
 function makeId() {
   return Date.now().toString();
 }
 
+function formatDate(ms) {
+  return new Date(ms).toLocaleString();
+}
 
 function loadAllNotes() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -96,103 +69,61 @@ function saveAllNotes(notes) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
 }
 
-function getNotesForSelectedNotebook() {
-  const all = loadAllNotes();
-  return all
-    .filter(n => n.notebookId === selectedNotebookId)
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+function getNotes() {
+  return loadAllNotes().filter(n => n.notebookId === selectedNotebookId);
 }
 
 async function loadNotebooks() {
-  hideError();
-
-  const urls = ["/api/notebooks", "/notebooks.json", "/backend/notebooks.json"];
-
+  const urls = ["/api/notebooks", "/backend/notebooks.json", "/notebooks.json"];
   for (const url of urls) {
     try {
       const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("bad response");
+      if (!res.ok) throw new Error();
       const data = await res.json();
-      if (!Array.isArray(data)) throw new Error("not array");
-
+      if (!Array.isArray(data)) throw new Error();
       notebooks = data;
-      renderNotebooks();
+      renderNotebookDropdown();
       return;
-    } catch (e) {
-    }
+    } catch {}
   }
-
-  showError("Failed to load notebooks.json. Click Reload.");
 }
 
-
-function renderNotebooks() {
-  notebookGrid.innerHTML = "";
-
+function renderNotebookDropdown() {
+  if (!notebookSelect) return;
+  notebookSelect.innerHTML = `<option value="">Select a notebook...</option>`;
   notebooks.forEach(nb => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-head">
-        <h3 class="card-title">${nb.title}</h3>
-        <span class="badge">open</span>
-      </div>
-      <p class="preview">Click to view notes</p>
-      <div class="card-actions">
-        <span class="badge">ID: ${nb.id}</span>
-        <span class="icon">→</span>
-      </div>
-    `;
-
-    card.addEventListener("click", () => {
-      selectedNotebookId = nb.id;
-      selectedNotebookName.textContent = nb.title;
-      notesSection.classList.remove("hidden");
-      searchInput.value = "";
-      searchText = "";
-      renderNotes();
-    });
-
-    notebookGrid.appendChild(card);
+    const opt = document.createElement("option");
+    opt.value = nb.id;
+    opt.textContent = nb.title;
+    notebookSelect.appendChild(opt);
   });
 }
 
 function renderNotes() {
-  if (!selectedNotebookId) return;
-
-  let notes = getNotesForSelectedNotebook();
-
-  const q = searchText.trim().toLowerCase();
-  if (q) {
-    notes = notes.filter(n => {
-      return (
-        (n.title || "").toLowerCase().includes(q) ||
-        (n.content || "").toLowerCase().includes(q)
-      );
-    });
-  }
+  const notes = getNotes().filter(n => {
+    if (!searchText) return true;
+    return (
+      (n.title || "").toLowerCase().includes(searchText) ||
+      (n.content || "").toLowerCase().includes(searchText)
+    );
+  });
 
   notesList.innerHTML = "";
 
-  if (notes.length === 0) {
-    emptyState.classList.remove("hidden");
-  } else {
-    emptyState.classList.add("hidden");
+  if (emptyState) {
+    if (notes.length === 0) emptyState.classList.remove("hidden");
+    else emptyState.classList.add("hidden");
   }
 
   notes.forEach(note => {
     const div = document.createElement("div");
     div.className = "note";
     div.innerHTML = `
-      <div class="meta">
-        <h3>${note.title}</h3>
-        <span class="badge">${formatDate(note.updatedAt)}</span>
-      </div>
+      <h3>${note.title}</h3>
+      <small>${formatDate(note.updatedAt)}</small>
       <p>${note.content}</p>
-      <div class="card-actions" style="margin-top:10px;">
-        <button class="link" data-action="edit">Edit</button>
-        <button class="danger" data-action="delete">Delete</button>
-      </div>
+      <button data-action="edit">Edit</button>
+      <button data-action="delete">Delete</button>
     `;
 
     div.querySelector('[data-action="edit"]').addEventListener("click", () => {
@@ -203,13 +134,8 @@ function renderNotes() {
     });
 
     div.querySelector('[data-action="delete"]').addEventListener("click", () => {
-      const ok = confirm("Delete this note?");
-      if (!ok) return;
-
-      const all = loadAllNotes();
-      const newAll = all.filter(n => n.id !== note.id);
-      saveAllNotes(newAll);
-
+      if (!confirm("Delete this note?")) return;
+      saveAllNotes(loadAllNotes().filter(n => n.id !== note.id));
       renderNotes();
       showToast("Deleted");
     });
@@ -218,96 +144,63 @@ function renderNotes() {
   });
 }
 
+if (searchInput) {
+  searchInput.addEventListener("input", e => {
+    searchText = e.target.value.toLowerCase();
+    renderNotes();
+  });
+}
 
-noteForm.addEventListener("submit", (e) => {
-  e.preventDefault();
+if (notebookSelect) {
+  notebookSelect.addEventListener("change", e => {
+    selectedNotebookId = e.target.value;
+    renderNotes();
+  });
+}
 
-  clearValidation();
+if (addNoteBtn) {
+  addNoteBtn.addEventListener("click", () => {
+    if (!selectedNotebookId) return;
+    editingNoteId = null;
+    noteForm.reset();
+    openModal(false);
+  });
+}
 
-  const title = noteTitle.value.trim();
-  const content = noteContent.value.trim();
+if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
 
-  let ok = true;
-  if (title.length < 2) {
-    errTitle.textContent = "Title must be at least 2 characters.";
-    errTitle.classList.remove("hidden");
-    ok = false;
-  }
-  if (content.length < 2) {
-    errContent.textContent = "Content must be at least 2 characters.";
-    errContent.classList.remove("hidden");
-    ok = false;
-  }
-  if (!ok) return;
+if (noteForm) {
+  noteForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const title = noteTitle.value.trim();
+    const content = noteContent.value.trim();
+    if (title.length < 2 || content.length < 2) return;
 
-  const all = loadAllNotes();
-  const now = Date.now();
+    const all = loadAllNotes();
+    const now = Date.now();
 
-  if (editingNoteId) {
-    const idx = all.findIndex(n => n.id === editingNoteId);
-    if (idx !== -1) {
-      all[idx].title = title;
-      all[idx].content = content;
-      all[idx].updatedAt = now; 
+    if (editingNoteId) {
+      const idx = all.findIndex(n => n.id === editingNoteId);
+      if (idx !== -1) {
+        all[idx].title = title;
+        all[idx].content = content;
+        all[idx].updatedAt = now;
+      }
+    } else {
+      all.push({
+        id: makeId(),
+        notebookId: selectedNotebookId,
+        title,
+        content,
+        updatedAt: now
+      });
     }
+
     saveAllNotes(all);
-    showToast("Updated");
-  } else {
-    const newNote = {
-      id: makeId(),
-      notebookId: selectedNotebookId,
-      title,
-      content,
-      updatedAt: now
-    };
-    all.push(newNote);
-    saveAllNotes(all);
-    showToast("Saved");
-  }
-
-  closeModal();
-  renderNotes();
-});
-
-searchInput.addEventListener("input", (e) => {
-  searchText = e.target.value;
-  renderNotes();
-});
-
-addNoteBtn.addEventListener("click", () => {
-  if (!selectedNotebookId) {
-    showToast("Select a notebook first");
-    return;
-  }
-  editingNoteId = null;
-  noteForm.reset();
-  openModal(false);
-});
-
-emptyAddBtn.addEventListener("click", () => {
-  if (!selectedNotebookId) return;
-  editingNoteId = null;
-  noteForm.reset();
-  openModal(false);
-});
-
-backBtn.addEventListener("click", () => {
-  notesSection.classList.add("hidden");
-  selectedNotebookId = null;
-});
-
-cancelBtn.addEventListener("click", closeModal);
-
-retryBtn.addEventListener("click", loadNotebooks);
-
-modalBackdrop.addEventListener("click", (e) => {
-  if (e.target === modalBackdrop) closeModal();
-});
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !modalBackdrop.classList.contains("hidden")) {
     closeModal();
-  }
-});
+    renderNotes();
+    showToast("Saved");
+  });
+}
 
 loadNotebooks();
