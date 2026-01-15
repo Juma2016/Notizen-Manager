@@ -1,206 +1,150 @@
-const searchInput = document.getElementById("searchInput") || document.getElementById("search");
-const notebookSelect = document.querySelector("select");
-const notesList = document.getElementById("notesList") || document.getElementById("notes");
-const emptyState = document.getElementById("emptyState") || null;
-const addNoteBtn = document.getElementById("addNoteBtn") || document.querySelector("button");
-const modalBackdrop = document.getElementById("modalBackdrop") || null;
-const modalTitle = document.getElementById("modalTitle") || null;
-const noteForm = document.getElementById("noteForm") || document.querySelector("form");
-const noteTitle = document.getElementById("noteTitle") || document.querySelector("input");
-const noteContent = document.getElementById("noteContent") || document.querySelector("textarea");
-const cancelBtn = document.getElementById("cancelBtn") || null;
-const errTitle = document.querySelector('[data-testid="err-title"]') || null;
-const errContent = document.querySelector('[data-testid="err-content"]') || null;
-const toast = document.getElementById("toast") || null;
+const notebookDropdown = document.getElementById("notebookDropdown");
+const notesSection = document.getElementById("notesSection");
+const notesList = document.getElementById("notesList");
+const notebookName = document.getElementById("notebookName");
+const addNoteBtn = document.getElementById("addNote");
+const addNoteInSection = document.getElementById("addNoteInSection");
+const modal = document.getElementById("modal");
+const noteForm = document.getElementById("noteForm");
+const titleInput = document.getElementById("title");
+const contentInput = document.getElementById("content");
+const cancelButton = document.getElementById("cancelButton");
+const searchInput = document.getElementById("search");
 
 let notebooks = [];
-let selectedNotebookId = "";
-let editingNoteId = null;
-let searchText = "";
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+let selectedNotebookId = null;
+let editNoteId = null;
 
-const STORAGE_KEY = "notes_manager_notes";
+/* تحميل notebooks */
+fetch("/backend/notebooks.json")
+  .then(res => res.json())
+  .then(data => {
+    notebooks = data;
+    fillNotebookDropdown();
+  })
+  .catch(() => alert("Failed to load notebooks"));
 
-function showToast(msg) {
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.classList.remove("hidden");
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => toast.classList.add("hidden"), 1500);
-}
-
-function openModal(isEdit) {
-  if (!modalBackdrop) return;
-  if (modalTitle) modalTitle.textContent = isEdit ? "Edit Note" : "New Note";
-  modalBackdrop.classList.remove("hidden");
-  modalBackdrop.setAttribute("aria-hidden", "false");
-  noteTitle.focus();
-}
-
-function closeModal() {
-  if (!modalBackdrop) return;
-  modalBackdrop.classList.add("hidden");
-  modalBackdrop.setAttribute("aria-hidden", "true");
-  noteForm.reset();
-  editingNoteId = null;
-  if (errTitle) errTitle.classList.add("hidden");
-  if (errContent) errContent.classList.add("hidden");
-}
-
-function makeId() {
-  return Date.now().toString();
-}
-
-function formatDate(ms) {
-  return new Date(ms).toLocaleString();
-}
-
-function loadAllNotes() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveAllNotes(notes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-}
-
-function getNotes() {
-  return loadAllNotes().filter(n => n.notebookId === selectedNotebookId);
-}
-
-async function loadNotebooks() {
-  const urls = ["/api/notebooks", "/backend/notebooks.json", "/notebooks.json"];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error();
-      notebooks = data;
-      renderNotebookDropdown();
-      return;
-    } catch {}
-  }
-}
-
-function renderNotebookDropdown() {
-  if (!notebookSelect) return;
-  notebookSelect.innerHTML = `<option value="">Select a notebook...</option>`;
+function fillNotebookDropdown() {
   notebooks.forEach(nb => {
-    const opt = document.createElement("option");
-    opt.value = nb.id;
-    opt.textContent = nb.title;
-    notebookSelect.appendChild(opt);
+    const option = document.createElement("option");
+    option.value = nb.id;
+    option.textContent = nb.title;
+    notebookDropdown.appendChild(option);
   });
 }
 
-function renderNotes() {
-  const notes = getNotes().filter(n => {
-    if (!searchText) return true;
-    return (
-      (n.title || "").toLowerCase().includes(searchText) ||
-      (n.content || "").toLowerCase().includes(searchText)
-    );
-  });
+/* اختيار Notebook */
+notebookDropdown.addEventListener("change", () => {
+  selectedNotebookId = notebookDropdown.value;
+  const nb = notebooks.find(n => n.id === selectedNotebookId);
+  notebookName.textContent = nb.title;
+  notesSection.classList.remove("hidden");
+  renderNotes();
+});
 
+/* عرض الملاحظات */
+function renderNotes() {
   notesList.innerHTML = "";
 
-  if (emptyState) {
-    if (notes.length === 0) emptyState.classList.remove("hidden");
-    else emptyState.classList.add("hidden");
-  }
+  const filtered = notes.filter(n => n.notebookId === selectedNotebookId);
 
-  notes.forEach(note => {
+  filtered.forEach(note => {
     const div = document.createElement("div");
-    div.className = "note";
+    div.className = "note-item";
+
     div.innerHTML = `
-      <h3>${note.title}</h3>
-      <small>${formatDate(note.updatedAt)}</small>
+      <div class="note-header">
+        <strong>${note.title}</strong>
+        <div class="note-actions">
+          <button class="edit-note">Edit</button>
+          <button class="delete-note">Delete</button>
+        </div>
+      </div>
       <p>${note.content}</p>
-      <button data-action="edit">Edit</button>
-      <button data-action="delete">Delete</button>
     `;
 
-    div.querySelector('[data-action="edit"]').addEventListener("click", () => {
-      editingNoteId = note.id;
-      noteTitle.value = note.title;
-      noteContent.value = note.content;
-      openModal(true);
-    });
-
-    div.querySelector('[data-action="delete"]').addEventListener("click", () => {
-      if (!confirm("Delete this note?")) return;
-      saveAllNotes(loadAllNotes().filter(n => n.id !== note.id));
-      renderNotes();
-      showToast("Deleted");
-    });
+    div.querySelector(".edit-note").onclick = () => openEdit(note);
+    div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
 
     notesList.appendChild(div);
   });
 }
 
-if (searchInput) {
-  searchInput.addEventListener("input", e => {
-    searchText = e.target.value.toLowerCase();
-    renderNotes();
-  });
+/* فتح المودال */
+addNoteBtn.onclick = () => openCreate();
+addNoteInSection.onclick = () => openCreate();
+cancelButton.onclick = closeModal;
+
+function openCreate() {
+  editNoteId = null;
+  titleInput.value = "";
+  contentInput.value = "";
+  modal.classList.remove("hidden");
 }
 
-if (notebookSelect) {
-  notebookSelect.addEventListener("change", e => {
-    selectedNotebookId = e.target.value;
-    renderNotes();
-  });
+function openEdit(note) {
+  editNoteId = note.id;
+  titleInput.value = note.title;
+  contentInput.value = note.content;
+  modal.classList.remove("hidden");
 }
 
-if (addNoteBtn) {
-  addNoteBtn.addEventListener("click", () => {
-    if (!selectedNotebookId) return;
-    editingNoteId = null;
-    noteForm.reset();
-    openModal(false);
-  });
+function closeModal() {
+  modal.classList.add("hidden");
 }
 
-if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+/* حفظ الملاحظة */
+noteForm.addEventListener("submit", e => {
+  e.preventDefault();
 
-if (noteForm) {
-  noteForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const title = noteTitle.value.trim();
-    const content = noteContent.value.trim();
-    if (title.length < 2 || content.length < 2) return;
+  if (!titleInput.value || !contentInput.value) return;
 
-    const all = loadAllNotes();
-    const now = Date.now();
+  if (editNoteId) {
+    const note = notes.find(n => n.id === editNoteId);
+    note.title = titleInput.value;
+    note.content = contentInput.value;
+    note.updatedAt = Date.now();
+  } else {
+    notes.push({
+      id: Date.now().toString(),
+      notebookId: selectedNotebookId,
+      title: titleInput.value,
+      content: contentInput.value,
+      updatedAt: Date.now()
+    });
+  }
 
-    if (editingNoteId) {
-      const idx = all.findIndex(n => n.id === editingNoteId);
-      if (idx !== -1) {
-        all[idx].title = title;
-        all[idx].content = content;
-        all[idx].updatedAt = now;
-      }
-    } else {
-      all.push({
-        id: makeId(),
-        notebookId: selectedNotebookId,
-        title,
-        content,
-        updatedAt: now
-      });
-    }
+  saveNotes();
+  closeModal();
+  renderNotes();
+});
 
-    saveAllNotes(all);
-    closeModal();
-    renderNotes();
-    showToast("Saved");
-  });
+/* حذف */
+function deleteNote(id) {
+  notes = notes.filter(n => n.id !== id);
+  saveNotes();
+  renderNotes();
 }
 
-loadNotebooks();
+/* حفظ في localStorage */
+function saveNotes() {
+  localStorage.setItem("notes", JSON.stringify(notes));
+}
+
+/* البحث */
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.toLowerCase();
+  const filtered = notes.filter(n =>
+    n.notebookId === selectedNotebookId &&
+    n.title.toLowerCase().includes(q)
+  );
+
+  notesList.innerHTML = "";
+  filtered.forEach(n => {
+    const div = document.createElement("div");
+    div.className = "note-item";
+    div.innerHTML = `<strong>${n.title}</strong><p>${n.content}</p>`;
+    notesList.appendChild(div);
+  });
+});
