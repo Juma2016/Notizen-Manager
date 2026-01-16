@@ -16,15 +16,15 @@ let selectedNotebookId = null;
 let editNoteId = null;
 
 fetch("/backend/notebooks.json")
-  .then(res => res.json())
-  .then(data => {
+  .then((res) => res.json())
+  .then((data) => {
     notebooks = data;
     fillNotebookDropdown();
   })
   .catch(() => alert("Failed to load notebooks"));
 
 function fillNotebookDropdown() {
-  notebooks.forEach(nb => {
+  notebooks.forEach((nb) => {
     const option = document.createElement("option");
     option.value = nb.id;
     option.textContent = nb.title;
@@ -33,23 +33,55 @@ function fillNotebookDropdown() {
 }
 
 notebookDropdown.addEventListener("change", () => {
-  selectedNotebookId = notebookDropdown.value;
-  const nb = notebooks.find(n => n.id === selectedNotebookId);
+  const selectedValue = notebookDropdown.value;
+
+  if (selectedValue === "" || selectedValue === "select") {
+    selectedNotebookId = null;
+    notesSection.classList.add("hidden");
+    searchInput.value = "";
+    return;
+  }
+
+  selectedNotebookId = selectedValue;
+  const nb = notebooks.find((n) => n.id === selectedNotebookId);
   notebookName.textContent = nb.title;
   notesSection.classList.remove("hidden");
+  addNoteInSection.style.display = "block";
+  searchInput.value = "";
+
   renderNotes();
 });
 
 function renderNotes() {
   notesList.innerHTML = "";
 
-  const filtered = notes.filter(n => n.notebookId === selectedNotebookId);
+  const searchTerm = searchInput.value.trim();
+  let filteredNotes;
 
-  filtered.forEach(note => {
-    const div = document.createElement("div");
-    div.className = "note-item";
+  if (searchTerm) {
+    filteredNotes = notes.filter(
+      (n) =>
+        n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        n.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  } else {
+    filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
+  }
 
-    div.innerHTML = `
+  if (filteredNotes.length === 0) {
+    if (searchTerm) {
+      notesList.innerHTML =
+        '<p class="no-results">Keine Ergebnisse gefunden</p>';
+    } else if (selectedNotebookId) {
+      notesList.innerHTML =
+        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+    }
+  } else {
+    filteredNotes.forEach((note) => {
+      const div = document.createElement("div");
+      div.className = "note-item";
+
+      div.innerHTML = `
       <div class="note-header">
         <strong>${note.title}</strong>
         <div class="note-actions">
@@ -60,14 +92,92 @@ function renderNotes() {
       <p>${note.content}</p>
     `;
 
-    div.querySelector(".edit-note").onclick = () => openEdit(note);
-    div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+      div.querySelector(".edit-note").onclick = () => openEdit(note);
+      div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+
+      notesList.appendChild(div);
+    });
+  }
+}
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.toLowerCase();
+
+  if (!selectedNotebookId && !q) {
+    notesSection.classList.add("hidden");
+    return;
+  }
+
+  if (!selectedNotebookId && q) {
+    notesSection.classList.remove("hidden");
+    notebookName.textContent = "Suchergebnisse";
+    addNoteInSection.style.display = "none";
+  }
+
+  if (selectedNotebookId && q) {
+    addNoteInSection.style.display = "none";
+  }
+
+  if (selectedNotebookId && !q) {
+    addNoteInSection.style.display = "block";
+    const nb = notebooks.find((n) => n.id === selectedNotebookId);
+    notebookName.textContent = nb.title;
+  }
+
+  let filtered;
+
+  if (q) {
+    filtered = notes.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
+    );
+  } else {
+    filtered = notes.filter((n) => n.notebookId === selectedNotebookId);
+  }
+
+  notesList.innerHTML = "";
+
+  if (filtered.length === 0) {
+    if (q) {
+      notesList.innerHTML =
+        '<p class="no-results">Keine Ergebnisse gefunden</p>';
+    } else if (selectedNotebookId) {
+      notesList.innerHTML =
+        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+    }
+    return;
+  }
+
+  filtered.forEach((n) => {
+    const div = document.createElement("div");
+    div.className = "note-item";
+
+    div.innerHTML = `
+      <div class="note-header">
+        <strong>${n.title}</strong>
+        <div class="note-actions">
+          <button class="edit-note">Edit</button>
+          <button class="delete-note">Delete</button>
+        </div>
+      </div>
+      <p>${n.content}</p>
+    `;
+
+    div.querySelector(".edit-note").onclick = () => openEdit(n);
+    div.querySelector(".delete-note").onclick = () => deleteNote(n.id);
 
     notesList.appendChild(div);
   });
-}
+});
 
-addNoteInSection.onclick = () => openCreate();
+addNoteInSection.onclick = () => {
+  if (!selectedNotebookId) {
+    alert("Bitte wähle zuerst ein Notizbuch aus");
+    return;
+  }
+  openCreate();
+};
+
 cancelButton.onclick = closeModal;
 
 function openCreate() {
@@ -88,13 +198,18 @@ function closeModal() {
   modal.classList.add("hidden");
 }
 
-noteForm.addEventListener("submit", e => {
+noteForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   if (!titleInput.value || !contentInput.value) return;
 
+  if (!selectedNotebookId) {
+    alert("Bitte wähle zuerst ein Notizbuch aus");
+    return;
+  }
+
   if (editNoteId) {
-    const note = notes.find(n => n.id === editNoteId);
+    const note = notes.find((n) => n.id === editNoteId);
     note.title = titleInput.value;
     note.content = contentInput.value;
     note.updatedAt = Date.now();
@@ -104,7 +219,7 @@ noteForm.addEventListener("submit", e => {
       notebookId: selectedNotebookId,
       title: titleInput.value,
       content: contentInput.value,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     });
   }
 
@@ -114,7 +229,7 @@ noteForm.addEventListener("submit", e => {
 });
 
 function deleteNote(id) {
-  notes = notes.filter(n => n.id !== id);
+  notes = notes.filter((n) => n.id !== id);
   saveNotes();
   renderNotes();
 }
@@ -122,19 +237,3 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
-
-searchInput.addEventListener("input", () => {
-  const q = searchInput.value.toLowerCase();
-  const filtered = notes.filter(n =>
-    n.notebookId === selectedNotebookId &&
-    n.title.toLowerCase().includes(q)
-  );
-
-  notesList.innerHTML = "";
-  filtered.forEach(n => {
-    const div = document.createElement("div");
-    div.className = "note-item";
-    div.innerHTML = `<strong>${n.title}</strong><p>${n.content}</p>`;
-    notesList.appendChild(div);
-  });
-});
