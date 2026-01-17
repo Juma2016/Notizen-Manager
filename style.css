@@ -178,6 +178,18 @@ button:hover {
   margin-bottom: 10px;
 }
 
+.note-header > div:first-child {
+  flex-grow: 1;
+}
+
+.note-date {
+  color: #8a94ad;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  font-weight: normal;
+}
+
 .note-actions {
   display: flex;
   gap: 8px;

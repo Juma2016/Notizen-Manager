@@ -15,6 +15,18 @@ let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
 
+function formatDate(timestamp) {
+  if (!timestamp) return "-";
+  const date = new Date(timestamp);
+  return date.toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 fetch("http://localhost:3000/api/notebooks")
   .then((res) => res.json())
   .then((data) => {
@@ -83,7 +95,10 @@ function renderNotes() {
 
       div.innerHTML = `
       <div class="note-header">
-        <strong data-testid="note-title">${note.title}</strong>
+        <div>
+          <strong data-testid="note-title">${note.title}</strong>
+          <p class="note-date">${formatDate(note.updatedAt)}</p>
+        </div>
         <div class="note-actions">
           <button class="edit-note">Edit</button>
           <button class="delete-note">Delete</button>
@@ -155,7 +170,10 @@ searchInput.addEventListener("input", () => {
 
     div.innerHTML = `
       <div class="note-header">
-        <strong data-testid="note-title">${n.title}</strong>
+        <div>
+          <strong data-testid="note-title">${n.title}</strong>
+          <p class="note-date">${formatDate(n.updatedAt)}</p>
+        </div>
         <div class="note-actions">
           <button class="edit-note">Edit</button>
           <button class="delete-note">Delete</button>
