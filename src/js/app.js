@@ -33,7 +33,12 @@ fetch("http://localhost:3000/api/notebooks")
     notebooks = data;
     fillNotebookDropdown();
   })
-  .catch(() => alert("Failed to load notebooks"));
+  .catch(() => {
+    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    if (reload) {
+      location.reload();
+    }
+  });
 
 function fillNotebookDropdown() {
   notebooks.forEach((nb) => {
