@@ -178,6 +178,8 @@ addNoteInSection.onclick = () => {
   openCreate();
 };
 
+addNoteBtn.onclick = () => openCreate();
+addNoteInSection.onclick = () => openCreate();
 cancelButton.onclick = closeModal;
 
 function openCreate() {
@@ -198,7 +200,7 @@ function closeModal() {
   modal.classList.add("hidden");
 }
 
-noteForm.addEventListener("submit", (e) => {
+noteForm.addEventListener("submit", e => {
   e.preventDefault();
 
   if (!titleInput.value || !contentInput.value) return;
@@ -237,3 +239,19 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.toLowerCase();
+  const filtered = notes.filter(n =>
+    n.notebookId === selectedNotebookId &&
+    n.title.toLowerCase().includes(q)
+  );
+
+  notesList.innerHTML = "";
+  filtered.forEach(n => {
+    const div = document.createElement("div");
+    div.className = "note-item";
+    div.innerHTML = `<strong>${n.title}</strong><p>${n.content}</p>`;
+    notesList.appendChild(div);
+  });
+});
