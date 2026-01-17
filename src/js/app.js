@@ -62,7 +62,7 @@ function renderNotes() {
     filteredNotes = notes.filter(
       (n) =>
         n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchTerm.toLowerCase())
+        n.content.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   } else {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
@@ -83,13 +83,13 @@ function renderNotes() {
 
       div.innerHTML = `
       <div class="note-header">
-        <strong>${note.title}</strong>
+        <strong data-testid="note-title">${note.title}</strong>
         <div class="note-actions">
           <button class="edit-note">Edit</button>
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p>${note.content}</p>
+      <p data-testid="note-content">${note.content}</p>
     `;
 
       div.querySelector(".edit-note").onclick = () => openEdit(note);
@@ -129,7 +129,8 @@ searchInput.addEventListener("input", () => {
   if (q) {
     filtered = notes.filter(
       (n) =>
-        n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q),
     );
   } else {
     filtered = notes.filter((n) => n.notebookId === selectedNotebookId);
@@ -154,13 +155,13 @@ searchInput.addEventListener("input", () => {
 
     div.innerHTML = `
       <div class="note-header">
-        <strong>${n.title}</strong>
+        <strong data-testid="note-title">${n.title}</strong>
         <div class="note-actions">
           <button class="edit-note">Edit</button>
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p>${n.content}</p>
+      <p data-testid="note-content">${n.content}</p>
     `;
 
     div.querySelector(".edit-note").onclick = () => openEdit(n);
@@ -178,8 +179,6 @@ addNoteInSection.onclick = () => {
   openCreate();
 };
 
-addNoteBtn.onclick = () => openCreate();
-addNoteInSection.onclick = () => openCreate();
 cancelButton.onclick = closeModal;
 
 function openCreate() {
@@ -200,7 +199,7 @@ function closeModal() {
   modal.classList.add("hidden");
 }
 
-noteForm.addEventListener("submit", e => {
+noteForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   if (!titleInput.value || !contentInput.value) return;
@@ -239,19 +238,3 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
-
-searchInput.addEventListener("input", () => {
-  const q = searchInput.value.toLowerCase();
-  const filtered = notes.filter(n =>
-    n.notebookId === selectedNotebookId &&
-    n.title.toLowerCase().includes(q)
-  );
-
-  notesList.innerHTML = "";
-  filtered.forEach(n => {
-    const div = document.createElement("div");
-    div.className = "note-item";
-    div.innerHTML = `<strong>${n.title}</strong><p>${n.content}</p>`;
-    notesList.appendChild(div);
-  });
-});

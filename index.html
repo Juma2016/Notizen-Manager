@@ -27,7 +27,7 @@
 
     <section id="notebooksSection">
       <div class="notebook-selector">
-        <select id="notebookDropdown" class="notebook-dropdown">
+        <select id="notebookDropdown" data-testid="notebookDropdown" class="notebook-dropdown">
           <option value="">Select a notebook...</option>
         </select>
         <div id="notebookInfo" class="notebook-info hidden">
@@ -44,7 +44,7 @@
         <h2><span id="notebookName"></span></h2>
         <div>
           <button id="cancelEditButton" class="cancel-button hidden">Cancel</button>
-          <button id="addNoteInSection" class="main-button">+ Add Note</button>
+          <button id="addNoteInSection" data-testid="addNoteInSection" class="main-button">+ Add Note</button>
         </div>
       </div>
 
@@ -63,13 +63,13 @@
       <form id="noteForm">
         <div class="input-group">
           <label for="title">Title*</label>
-          <input id="title" type="text" required placeholder="e.g., Shopping list">
+          <input id="title" type="text" data-testid="title" required placeholder="e.g., Shopping list">
           <div id="titleError" class="error-message hidden"></div>
         </div>
 
         <div class="input-group">
           <label for="content">Content*</label>
-          <textarea id="content" required placeholder="Write your note..."></textarea>
+          <textarea id="content" data-testid="content" required placeholder="Write your note..."></textarea>
           <div id="contentError" class="error-message hidden"></div>
         </div>
 
