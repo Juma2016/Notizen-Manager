@@ -15,7 +15,7 @@ let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
 
-fetch("/backend/notebooks.json")
+fetch("http://localhost:3000/api/notebooks")
   .then((res) => res.json())
   .then((data) => {
     notebooks = data;
