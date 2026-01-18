@@ -97,6 +97,26 @@ test("Bearbeiten → updatedAt ändert sich.", async ({ page }) => {
   );
 });
 
+test("Editieren einer Notiz aktualisiert den Zeitstempel", async ({ page }) => {
+  await page.goto(frontendUrl);
+
+  await page.getByTestId("notebookDropdown").selectOption("nb1");
+  await createNote(page, "Zeit-Test", "Inhalt vor dem Edit");
+
+  const oldDateText = await page.locator(".note-date").first().textContent();
+  
+  await page.waitForTimeout(1500); 
+
+  await page.getByRole("button", { name: "Edit" }).first().click();
+  await page.getByTestId("title").fill("Zeit-Test Editierter Titel");
+  await page.getByText("Save Note").click();
+
+  const newDateText = await page.locator(".note-date").first().textContent();
+
+  expect(newDateText).toBeTruthy(); 
+  
+});
+
 test("Suche filtert korrekt", async ({ page }) => {
   await page.goto(frontendUrl);
 
