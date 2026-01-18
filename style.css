@@ -336,3 +336,16 @@ button:hover {
 #notesSection {
   margin-top: 40px;
 }
+
+.note-item p[data-testid="note-content"] {
+  white-space: pre-line;
+  word-wrap: break-word;
+  line-height: 1.5;
+  margin-top: 10px;
+  max-height: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
