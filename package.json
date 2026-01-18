@@ -9,7 +9,8 @@
   "description": "",
   "main": "backend/notebooks.js",
   "scripts": {
-    "dev": "node backend/notebooks.js"
+    "dev": "node backend/notebooks.js",
+    "test": "playwright test"
   },
   "repository": {
     "type": "git",
