@@ -2,6 +2,16 @@
 
 A simple and modern notes management web application built with HTML, CSS and JavaScript. Manage your notes across different notebooks with an intuitive interface.
 
+## Tech Stack
+
+| Tool | Purpose |
+|------|----------|
+| **Frontend** | HTML5, CSS3, Vanilla JavaScript |
+| **Backend** | Node.js with Express (for notebooks API) |
+| **Testing**| Playwright for end-to-end testing |
+| **Storage**| localStorage for client-side persistence |
+| **Styling**| Custom CSS with modern design system |
+
 ## Setup & Start
 
 1. Clone the repository:
@@ -67,14 +77,6 @@ npx playwright show-report
 - **No Categories/Tags**: Notes can only be organized by notebooks
 - **Export/Import**: No feature to export or import notes as files
 - **No Rich Text**: Plain text formatting only (no bold, italics, etc.)
-
-## Tech Stack
-
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Backend**: Node.js with Express (for notebooks API)
-- **Testing**: Playwright for end-to-end testing
-- **Storage**: localStorage for client-side persistence
-- **Styling**: Custom CSS with modern design system
 
 ## Authors
 
