@@ -15,7 +15,7 @@ test("Richtige Seite Laden", async ({ page }) => {
   await expect(page).toHaveTitle(/Notes Manager/);
 });
 
-test("Notizt Bücher werden geladen", async ({ request }) => {
+test("Notiz Bücher werden geladen", async ({ request }) => {
   const response = await request.get("/api/notebooks");
   expect(response.ok).toBeTruthy();
   expect(await response.json()).toEqual([
