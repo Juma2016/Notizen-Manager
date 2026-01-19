@@ -76,16 +76,17 @@ npm run dev
 - **Empty States**: Clear messages when no notes/notebooks exist
 - **Modal Interface**: Clean popup forms for note creation/editing
 
-## Running Playwright Tests
+# Playwright tests
 
-To run the Playwright end-to-end tests:
-
-# Run all tests
+Run all playwrights tests
+ ```
 npm test
+```
 
-# Generate test report
+Generate test report
+```
 npx playwright show-report
-
+```
 
 ## Known Limitations / Open Points
 
@@ -104,3 +105,4 @@ npx playwright show-report
 - [Mario Shenouda](https://github.com/Juma2016)
 
 - [Maryam Taeid](https://github.com/maryamtaeid)
+
