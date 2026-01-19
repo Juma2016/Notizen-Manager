@@ -2,6 +2,33 @@
 
 A simple and modern notes management web application built with HTML, CSS and JavaScript. Manage your notes across different notebooks with an intuitive interface.
 
+## Projektstruktur
+```
+
+NOTIZEN-MANAGER/
+├── .github/
+│   └── workflows/
+│       └── playwright.yml
+├── backend/
+│   ├── notebooks.js
+│   |── notebooks.json
+├── src/
+│   └── js/
+│       └── app.js
+├── tests/
+│   ├── createNotes.js
+│   ├── filterobjects.js
+│   |── notebook.spec.js
+├── .gitignore
+├── index.html
+├── package-lock.json
+├── package.json
+├── playwright.config.js
+├── README.md
+|── style.css
+
+```
+
 ## Tech Stack
 
 | Tool | Purpose |
@@ -58,7 +85,7 @@ npm test
 
 # Generate test report
 npx playwright show-report
-```
+
 
 ## Known Limitations / Open Points
 
@@ -75,4 +102,5 @@ npx playwright show-report
 - [Linda Kadyrova](https://github.com/lindakadyrova)
 - [Casper Zielinski](https://github.com/casper-zielinski) 
 - [Mario Shenouda](https://github.com/Juma2016)
+
 - [Maryam Taeid](https://github.com/maryamtaeid)
