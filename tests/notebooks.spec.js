@@ -103,6 +103,8 @@ test("Editieren einer Notiz aktualisiert den Zeitstempel", async ({ page }) => {
   await page.getByTestId("notebookDropdown").selectOption("nb1");
   await createNote(page, "Zeit-Test", "Inhalt vor dem Edit");
   
+  const oldDateText = await page.locator(".note-date").first().textContent();
+  
   await page.waitForTimeout(1500); 
 
   await page.getByRole("button", { name: "Edit" }).first().click();
@@ -111,8 +113,8 @@ test("Editieren einer Notiz aktualisiert den Zeitstempel", async ({ page }) => {
 
   const newDateText = await page.locator(".note-date").first().textContent();
 
-  expect(newDateText).toBeTruthy(); 
-  
+  expect(newDateText).toBeTruthy();
+  expect(newDateText).not.toBe(oldDateText);
 });
 
 test("Suche filtert korrekt", async ({ page }) => {
