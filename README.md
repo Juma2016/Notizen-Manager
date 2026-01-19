@@ -31,10 +31,6 @@ npm run dev
 ```
 
 4. Open `index.html` in your browser or use a local server:
-```bash
-# Using Node.js with http-server
-npx http-server
-```
 
 5. Access the application at `http://127.0.0.1:5500/index.html` or you choose one from the terminal 
 
@@ -57,12 +53,8 @@ npx http-server
 
 To run the Playwright end-to-end tests:
 
-```bash
-# Install Playwright browsers (first time only)
-npx playwright install
-
 # Run all tests
-npx test
+npm test
 
 # Generate test report
 npx playwright show-report
