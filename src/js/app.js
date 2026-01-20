@@ -10,10 +10,12 @@ const contentInput = document.getElementById("content");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 
+
 let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
+let currentSearchQuery = "";
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
@@ -262,7 +264,10 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
+
 searchInput.addEventListener("input", (e) => {
-  const query =e.target.value;
-  console.log("Search query:", query);
+  currentSearchQuery = e.target.value.toLowerCase();
+  renderNotes();
 });
+
+
