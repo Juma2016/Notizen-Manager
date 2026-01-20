@@ -7,11 +7,19 @@ const modal = document.getElementById("modal");
 const noteForm = document.getElementById("noteForm");
 const titleInput = document.getElementById("title");
 const contentInput = document.getElementById("content");
+const tagsInput = document.getElementById("tags");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 
 let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+notes.forEach((n) => {
+  if (!Array.isArray(n.tags)) {
+    n.tags = [];
+  }
+});
+
 let selectedNotebookId = null;
 let editNoteId = null;
 
@@ -111,6 +119,7 @@ function renderNotes() {
         </div>
       </div>
       <p data-testid="note-content">${note.content}</p>
+      ${note.tags && note.tags.length ? `<p class="note-tags" data-testid="note-tags">${note.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
     `;
 
       div.querySelector(".edit-note").onclick = () => openEdit(note);
@@ -186,6 +195,7 @@ searchInput.addEventListener("input", () => {
         </div>
       </div>
       <p data-testid="note-content">${n.content}</p>
+      ${n.tags && n.tags.length ? `<p class="note-tags" data-testid="note-tags">${n.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
     `;
 
     div.querySelector(".edit-note").onclick = () => openEdit(n);
@@ -209,6 +219,7 @@ function openCreate() {
   editNoteId = null;
   titleInput.value = "";
   contentInput.value = "";
+  tagsInput.value = "";
   modal.classList.remove("hidden");
 }
 
@@ -216,6 +227,7 @@ function openEdit(note) {
   editNoteId = note.id;
   titleInput.value = note.title;
   contentInput.value = note.content;
+  tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   modal.classList.remove("hidden");
 }
 
@@ -233,13 +245,22 @@ noteForm.addEventListener("submit", (e) => {
     return;
   }
 
+  const tagsArray = tagsInput.value
+    .split(" ")
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+
+  const uniqueTags = [...new Set(tagsArray)];
+
   if (editNoteId) {
     const note = notes.find((n) => n.id === editNoteId);
     note.title = titleInput.value;
     note.content = contentInput.value;
     note.updatedAt = Date.now();
+    note.tags = uniqueTags;
   } else {
     notes.push({
+      tags: uniqueTags,
       id: Date.now().toString(),
       notebookId: selectedNotebookId,
       title: titleInput.value,
