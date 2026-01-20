@@ -389,6 +389,67 @@ function openEdit(note) {
   modal.classList.remove("hidden");
 }
 
+// Zeichenlimit-Warnung für Titel
+titleInput.addEventListener("input", function () {
+  const maxLength = 50;
+  const currentLength = this.value.length;
+  const message = document.getElementById("titleLimitMessage");
+
+  if (currentLength === maxLength) {
+    message.classList.remove("hidden");
+  } else {
+    message.classList.add("hidden");
+  }
+});
+
+// Auch beim Einfügen (Ctrl+V) prüfen
+titleInput.addEventListener("paste", function () {
+  setTimeout(() => {
+    const maxLength = 50;
+    const currentLength = this.value.length;
+    const message = document.getElementById("titleLimitMessage");
+
+    if (currentLength === maxLength) {
+      message.classList.remove("hidden");
+    } else {
+      message.classList.add("hidden");
+    }
+  }, 10);
+});
+
+function openCreate() {
+  editNoteId = null;
+  titleInput.value = "";
+  contentInput.value = "";
+
+  const message = document.getElementById("titleLimitMessage");
+  message.classList.add("hidden");
+
+  modal.classList.remove("hidden");
+}
+
+function openEdit(note) {
+  editNoteId = note.id;
+  titleInput.value = note.title;
+  contentInput.value = note.content;
+
+  const message = document.getElementById("titleLimitMessage");
+  if (note.title.length === 50) {
+    message.classList.remove("hidden");
+  } else {
+    message.classList.add("hidden");
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closeModal() {
+  const message = document.getElementById("titleLimitMessage");
+  message.classList.add("hidden");
+  
+  modal.classList.add("hidden");
+}
+
 noteForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
