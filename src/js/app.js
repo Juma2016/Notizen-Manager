@@ -11,6 +11,7 @@ const tagsInput = document.getElementById("tags");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 const tagFilter = document.getElementById("tagFilter");
+const sortSelect = document.getElementById("sort-select");
 
 let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
@@ -21,6 +22,40 @@ notes.forEach((n) => {
 
 let selectedNotebookId = null;
 let editNoteId = null;
+
+// Sorting (default newest first)
+let currentSort = "date-desc";
+
+function sortNotes(notesArray, sortType, order) {
+  if (!notesArray || notesArray.length === 0) return notesArray;
+
+  const sorted = [...notesArray];
+
+  sorted.sort((a, b) => {
+    let comparison = 0;
+
+    if (sortType === "title") {
+      const titleA = String(a.title || "").toLowerCase();
+      const titleB = String(b.title || "").toLowerCase();
+      comparison = titleA.localeCompare(titleB);
+    } else {
+      const dateA = Number(a.updatedAt || 0);
+      const dateB = Number(b.updatedAt || 0);
+      comparison = dateA - dateB;
+    }
+
+    return order === "desc" ? -comparison : comparison;
+  });
+
+  return sorted;
+}
+
+if (sortSelect) {
+  sortSelect.addEventListener("change", function () {
+    currentSort = this.value || "date-desc";
+    renderNotes();
+  });
+}
 
 const selectedTags = new Set();
 let allMode = false;
@@ -40,7 +75,6 @@ function formatDate(timestamp) {
 }
 
 function escapeHtml(s) {
-  // optional safety for highlight output
   return String(s)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -70,9 +104,6 @@ fetch("http://localhost:3000/api/notebooks")
   });
 
 function fillNotebookDropdown() {
-  // clear existing options except placeholder (optional)
-  // notebookDropdown.innerHTML = notebookDropdown.innerHTML;
-
   notebooks.forEach((nb) => {
     const option = document.createElement("option");
     option.value = nb.id;
@@ -201,9 +232,6 @@ function renderNotes() {
   notesList.innerHTML = "";
 
   const searchTerm = searchInput.value.trim();
-
-  // base set: if a notebook is selected -> only notes from that notebook
-  // if no notebook selected -> all notes (for global search view)
   let filteredNotes = selectedNotebookId
     ? notes.filter((n) => n.notebookId === selectedNotebookId)
     : [...notes];
@@ -218,7 +246,7 @@ function renderNotes() {
     );
   }
 
-  // apply tag filtering (AND logic)
+  // apply tag filtering (AND)
   if (!allMode && selectedTags.size > 0) {
     filteredNotes = filteredNotes.filter((n) => {
       const ntags = Array.isArray(n.tags) ? n.tags : [];
@@ -227,6 +255,12 @@ function renderNotes() {
       }
       return true;
     });
+  }
+
+  // apply sorting
+  if (filteredNotes.length > 0) {
+    const [sortType, order] = (currentSort || "date-desc").split("-");
+    filteredNotes = sortNotes(filteredNotes, sortType, order);
   }
 
   if (filteredNotes.length === 0) {
@@ -278,7 +312,7 @@ function renderNotes() {
   });
 }
 
-// ONE search listener فقط (مش مكرر)
+// ONE search listener فقط
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.trim().toLowerCase();
 
@@ -305,88 +339,3 @@ searchInput.addEventListener("input", () => {
 
   renderNotes();
 });
-
-addNoteInSection.onclick = () => {
-  if (!selectedNotebookId) {
-    alert("Bitte wähle zuerst ein Notizbuch aus");
-    return;
-  }
-  openCreate();
-};
-
-cancelButton.onclick = closeModal;
-
-function openCreate() {
-  editNoteId = null;
-  titleInput.value = "";
-  contentInput.value = "";
-  tagsInput.value = "";
-  modal.classList.remove("hidden");
-}
-
-function openEdit(note) {
-  editNoteId = note.id;
-  titleInput.value = note.title || "";
-  contentInput.value = note.content || "";
-  tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
-  modal.classList.remove("hidden");
-}
-
-function closeModal() {
-  modal.classList.add("hidden");
-}
-
-noteForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  if (!titleInput.value || !contentInput.value) return;
-
-  if (!selectedNotebookId) {
-    alert("Bitte wähle zuerst ein Notizbuch aus");
-    return;
-  }
-
-  const tagsArray = tagsInput.value
-    .split(",")
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
-
-  const uniqueTags = [...new Set(tagsArray)];
-
-  if (editNoteId) {
-    const note = notes.find((n) => n.id === editNoteId);
-    if (!note) return;
-
-    note.title = titleInput.value;
-    note.content = contentInput.value;
-    note.updatedAt = Date.now();
-    note.tags = uniqueTags;
-  } else {
-    notes.push({
-      tags: uniqueTags,
-      id: Date.now().toString(),
-      notebookId: selectedNotebookId,
-      title: titleInput.value,
-      content: contentInput.value,
-      updatedAt: Date.now()
-    });
-  }
-
-  saveNotes();
-  closeModal();
-
-  renderTagDropdown();
-  renderNotes();
-});
-
-function deleteNote(id) {
-  notes = notes.filter((n) => n.id !== id);
-  saveNotes();
-
-  renderTagDropdown();
-  renderNotes();
-}
-
-function saveNotes() {
-  localStorage.setItem("notes", JSON.stringify(notes));
-}
