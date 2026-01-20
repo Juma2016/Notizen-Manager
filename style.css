@@ -520,3 +520,18 @@ button:hover {
     height: 40px;
   }
 }
+
+/* Limit message styling */
+.limit-message {
+  margin-top: 5px;
+  font-size: 0.85rem;
+  color: #ff4d4d;
+  text-align: right;
+  padding: 3px 0;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
