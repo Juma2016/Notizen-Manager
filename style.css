@@ -349,3 +349,10 @@ button:hover {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+.note-tags {
+  margin-top: 10px;
+  color: #8a94ad;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
