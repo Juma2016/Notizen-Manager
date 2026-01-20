@@ -56,6 +56,45 @@ function formatDate(timestamp) {
     second: "2-digit",
   });
 }
+function viewNoteContent(note) {
+  const titleElement = document.getElementById("viewNoteTitle");
+  const contentElement = document.getElementById("viewNoteContent");
+  
+  const maxLength = 60;
+  if (note.title.length > maxLength) {
+    titleElement.textContent = note.title.substring(0, maxLength) + '...';
+    titleElement.title = note.title;
+  } else {
+    titleElement.textContent = note.title;
+    titleElement.title = '';
+  }
+  
+  contentElement.textContent = note.content;
+  
+  document.getElementById("noteContentView").classList.remove("hidden");
+}
+
+function closeNoteView() {
+  document.getElementById("noteContentView").classList.add("hidden");
+}
+
+document.getElementById("closeNoteView").addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  closeNoteView();
+});
+
+document.getElementById("noteContentView").addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeNoteView();
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && !document.getElementById("noteContentView").classList.contains("hidden")) {
+    closeNoteView();
+  }
+});
 
 fetch("http://localhost:3000/api/notebooks")
   .then((res) => res.json())
@@ -115,7 +154,6 @@ function renderNotes() {
   const searchTerm = searchInput.value.trim().toLowerCase();
   let filteredNotes;
 
-  // Filtern nach Suchbegriff oder Notebook
   if (searchTerm) {
     filteredNotes = notes.filter(
       (n) =>
@@ -139,13 +177,11 @@ function renderNotes() {
     addNoteInSection.style.display = "block";
   }
 
-  // Sortieren der gefilterten Notizen
   if (filteredNotes.length > 0) {
     const [sortType, order] = currentSort.split("-");
     filteredNotes = sortNotes(filteredNotes, sortType, order);
   }
 
-  // Anzeigen
   if (filteredNotes.length === 0) {
     notesList.innerHTML = searchTerm
       ? '<p class="no-results">Keine Ergebnisse gefunden</p>'
@@ -156,6 +192,7 @@ function renderNotes() {
   filteredNotes.forEach((note) => {
     const div = document.createElement("div");
     div.className = "note-item";
+    div.addEventListener('click', () => viewNoteContent(note));
 
     div.innerHTML = `
       <div class="note-header">
@@ -175,8 +212,15 @@ function renderNotes() {
       </p>
     `;
 
-    div.querySelector(".edit-note").onclick = () => openEdit(note);
-    div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+    div.querySelector(".edit-note").addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEdit(note);
+    });
+
+    div.querySelector(".delete-note").addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteNote(note.id);
+    });
 
     notesList.appendChild(div);
   });
