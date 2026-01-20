@@ -10,7 +10,6 @@ const contentInput = document.getElementById("content");
 const tagsInput = document.getElementById("tags");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
-
 const tagFilter = document.getElementById("tagFilter");
 
 let notebooks = [];
@@ -22,7 +21,6 @@ notes.forEach((n) => {
 
 let selectedNotebookId = null;
 let editNoteId = null;
-let currentSearchQuery = "";
 
 const selectedTags = new Set();
 let allMode = false;
@@ -41,6 +39,25 @@ function formatDate(timestamp) {
   });
 }
 
+function escapeHtml(s) {
+  // optional safety for highlight output
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function highlightText(text, searchTerm) {
+  const safeText = escapeHtml(text);
+  if (!searchTerm) return safeText;
+
+  const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  return safeText.replace(regex, "<mark>$1</mark>");
+}
+
 fetch("http://localhost:3000/api/notebooks")
   .then((res) => res.json())
   .then((data) => {
@@ -53,6 +70,9 @@ fetch("http://localhost:3000/api/notebooks")
   });
 
 function fillNotebookDropdown() {
+  // clear existing options except placeholder (optional)
+  // notebookDropdown.innerHTML = notebookDropdown.innerHTML;
+
   notebooks.forEach((nb) => {
     const option = document.createElement("option");
     option.value = nb.id;
@@ -87,6 +107,7 @@ function renderTagDropdown() {
     tagFilter.appendChild(opt);
   });
 
+  // remove selectedTags that no longer exist
   const allowed = new Set(allTags);
   for (const t of Array.from(selectedTags)) {
     if (!allowed.has(t)) selectedTags.delete(t);
@@ -115,12 +136,14 @@ notebookDropdown.addEventListener("change", () => {
     selectedNotebookId = null;
     notesSection.classList.add("hidden");
     searchInput.value = "";
+    renderNotes();
     return;
   }
 
   selectedNotebookId = selectedValue;
   const nb = notebooks.find((n) => n.id === selectedNotebookId);
-  notebookName.textContent = nb.title;
+
+  notebookName.textContent = nb ? nb.title : "Notizbuch";
   notesSection.classList.remove("hidden");
   addNoteInSection.style.display = "block";
   searchInput.value = "";
@@ -139,6 +162,7 @@ if (tagFilter) {
   tagFilter.addEventListener("change", () => {
     const allOpt = tagFilter.querySelector('option[value=""]');
 
+    // click on "All tags"
     if (lastTagClickValue === "" && allOpt) {
       if (!allMode) {
         allMode = true;
@@ -177,18 +201,24 @@ function renderNotes() {
   notesList.innerHTML = "";
 
   const searchTerm = searchInput.value.trim();
-  let filteredNotes;
 
+  // base set: if a notebook is selected -> only notes from that notebook
+  // if no notebook selected -> all notes (for global search view)
+  let filteredNotes = selectedNotebookId
+    ? notes.filter((n) => n.notebookId === selectedNotebookId)
+    : [...notes];
+
+  // apply search
   if (searchTerm) {
-    filteredNotes = notes.filter(
+    const s = searchTerm.toLowerCase();
+    filteredNotes = filteredNotes.filter(
       (n) =>
-        n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchTerm.toLowerCase())
+        String(n.title || "").toLowerCase().includes(s) ||
+        String(n.content || "").toLowerCase().includes(s)
     );
-  } else {
-    filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
   }
 
+  // apply tag filtering (AND logic)
   if (!allMode && selectedTags.size > 0) {
     filteredNotes = filteredNotes.filter((n) => {
       const ntags = Array.isArray(n.tags) ? n.tags : [];
@@ -204,6 +234,8 @@ function renderNotes() {
       notesList.innerHTML = '<p class="no-results">Keine Ergebnisse gefunden</p>';
     } else if (selectedNotebookId) {
       notesList.innerHTML = '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+    } else {
+      notesList.innerHTML = '<p class="no-results">Keine Notizen vorhanden</p>';
     }
     return;
   }
@@ -215,7 +247,9 @@ function renderNotes() {
     div.innerHTML = `
       <div class="note-header">
         <div>
-          <strong data-testid="note-title">${note.title}</strong>
+          <strong data-testid="note-title">
+            ${highlightText(note.title || "", searchTerm)}
+          </strong>
           <p class="note-date">${formatDate(note.updatedAt)}</p>
         </div>
         <div class="note-actions">
@@ -223,10 +257,16 @@ function renderNotes() {
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p data-testid="note-content">${note.content}</p>
+
+      <p data-testid="note-content">
+        ${highlightText(note.content || "", searchTerm)}
+      </p>
+
       ${
         note.tags && note.tags.length
-          ? `<p class="note-tags" data-testid="note-tags">${note.tags.map((t) => `#${t}`).join(" ")}</p>`
+          ? `<p class="note-tags" data-testid="note-tags">${note.tags
+              .map((t) => `#${escapeHtml(t)}`)
+              .join(" ")}</p>`
           : ""
       }
     `;
@@ -238,8 +278,9 @@ function renderNotes() {
   });
 }
 
+// ONE search listener فقط (مش مكرر)
 searchInput.addEventListener("input", () => {
-  const q = searchInput.value.toLowerCase();
+  const q = searchInput.value.trim().toLowerCase();
 
   if (!selectedNotebookId && !q) {
     notesSection.classList.add("hidden");
@@ -259,7 +300,7 @@ searchInput.addEventListener("input", () => {
   if (selectedNotebookId && !q) {
     addNoteInSection.style.display = "block";
     const nb = notebooks.find((n) => n.id === selectedNotebookId);
-    notebookName.textContent = nb.title;
+    notebookName.textContent = nb ? nb.title : "Notizbuch";
   }
 
   renderNotes();
@@ -285,8 +326,8 @@ function openCreate() {
 
 function openEdit(note) {
   editNoteId = note.id;
-  titleInput.value = note.title;
-  contentInput.value = note.content;
+  titleInput.value = note.title || "";
+  contentInput.value = note.content || "";
   tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   modal.classList.remove("hidden");
 }
@@ -314,6 +355,8 @@ noteForm.addEventListener("submit", (e) => {
 
   if (editNoteId) {
     const note = notes.find((n) => n.id === editNoteId);
+    if (!note) return;
+
     note.title = titleInput.value;
     note.content = contentInput.value;
     note.updatedAt = Date.now();
@@ -347,10 +390,3 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
-
-searchInput.addEventListener("input", (e) => {
-  currentSearchQuery = e.target.value.toLowerCase();
-  renderNotes();
-});
-
-
