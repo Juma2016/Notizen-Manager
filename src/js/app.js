@@ -82,7 +82,7 @@ function renderNotes() {
     filteredNotes = notes.filter(
       (n) =>
         n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchTerm.toLowerCase()),
+        n.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
   } else {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
@@ -102,18 +102,22 @@ function renderNotes() {
       div.className = "note-item";
 
       div.innerHTML = `
-      <div class="note-header">
-        <div>
-          <strong data-testid="note-title">${note.title}</strong>
-          <p class="note-date">${formatDate(note.updatedAt)}</p>
+        <div class="note-header">
+          <div>
+            <strong data-testid="note-title">
+              ${highlightText(note.title, searchTerm)}
+            </strong>
+            <p class="note-date">${formatDate(note.updatedAt)}</p>
+          </div>
+          <div class="note-actions">
+            <button class="edit-note">Edit</button>
+            <button class="delete-note">Delete</button>
+          </div>
         </div>
-        <div class="note-actions">
-          <button class="edit-note">Edit</button>
-          <button class="delete-note">Delete</button>
-        </div>
-      </div>
-      <p data-testid="note-content">${note.content}</p>
-    `;
+        <p data-testid="note-content">
+          ${highlightText(note.content, searchTerm)}
+        </p>
+      `;
 
       div.querySelector(".edit-note").onclick = () => openEdit(note);
       div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
@@ -122,6 +126,7 @@ function renderNotes() {
     });
   }
 }
+
 
 searchInput.addEventListener("input", () => {
   const q = searchInput.value.toLowerCase();
@@ -269,5 +274,23 @@ searchInput.addEventListener("input", (e) => {
   currentSearchQuery = e.target.value.toLowerCase();
   renderNotes();
 });
+
+function filterNotesBySearch(notesy) {
+  if (!currentSearchQuery) return notesy;
+
+  return notesy.filter(
+    (n) =>
+      n.title.toLowerCase().includes(currentSearchQuery) ||
+      n.content.toLowerCase().includes(currentSearchQuery),
+  );
+}
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm) return text;
+
+  const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  return text.replace(regex, "<mark>$1</mark>");
+}
 
 
