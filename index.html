@@ -14,6 +14,12 @@
       <h1>Notes Manager</h1>
       <div class="tools">
         <input id="search" type="search" placeholder="Search notes...">
+
+        <!-- Tag Filter UI -->
+        <select id="tagFilter" data-testid="tagFilter" class="tag-dropdown">
+          <option value="">All tags</option>
+        </select>
+        <button id="clearTagFilter" data-testid="clearTagFilter" type="button">Reset</button>
       </div>
     </div>
   </header>
