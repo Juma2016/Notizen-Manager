@@ -9,6 +9,7 @@ const titleInput = document.getElementById("title");
 const contentInput = document.getElementById("content");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
+const sortSelect = document.getElementById("sort-select");
 
 
 let notebooks = [];
@@ -16,6 +17,34 @@ let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
 let currentSearchQuery = "";
+let currentSort = "date-desc"; 
+
+function sortNotes(notesArray, sortType, order) {
+  if (!notesArray || notesArray.length === 0) return notesArray;
+
+  const sorted = [...notesArray];
+
+  sorted.sort((a, b) => {
+    let comparison = 0;
+
+    if (sortType === "title") {
+      // Titel sortieren (Groß-/Kleinschreibung ignorieren)
+      const titleA = a.title?.toLowerCase() || "";
+      const titleB = b.title?.toLowerCase() || "";
+      comparison = titleA.localeCompare(titleB);
+    } else {
+      // Datum sortieren (standardmäßig)
+      const dateA = new Date(a.updatedAt || 0);
+      const dateB = new Date(b.updatedAt || 0);
+      comparison = dateA - dateB;
+    }
+
+    // Die Reihenfolge umkehren
+    return order === "desc" ? -comparison : comparison;
+  });
+
+  return sorted;
+}
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
@@ -52,6 +81,11 @@ function fillNotebookDropdown() {
   });
 }
 
+sortSelect.addEventListener("change", function () {
+  currentSort = this.value;
+  renderNotes(); // Notizen neu rendern mit neuer Sortierung
+});
+
 notebookDropdown.addEventListener("change", () => {
   const selectedValue = notebookDropdown.value;
 
@@ -78,6 +112,7 @@ function renderNotes() {
   const searchTerm = searchInput.value.trim();
   let filteredNotes;
 
+  // Filtern nach Suchbegriff oder Notebook
   if (searchTerm) {
     filteredNotes = notes.filter(
       (n) =>
@@ -88,6 +123,13 @@ function renderNotes() {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
   }
 
+  // 2. Sortieren der gefilterten Notizen
+  if (filteredNotes.length > 0) {
+    const [sortType, order] = currentSort.split("-");
+    filteredNotes = sortNotes(filteredNotes, sortType, order);
+  }
+
+  // 3. Anzeigen
   if (filteredNotes.length === 0) {
     if (searchTerm) {
       notesList.innerHTML =
@@ -162,6 +204,12 @@ searchInput.addEventListener("input", () => {
     );
   } else {
     filtered = notes.filter((n) => n.notebookId === selectedNotebookId);
+  }
+
+  // Suchergebnisse auch sortieren
+  if (filtered.length > 0) {
+    const [sortType, order] = currentSort.split("-");
+    filtered = sortNotes(filtered, sortType, order);
   }
 
   notesList.innerHTML = "";
