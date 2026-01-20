@@ -14,12 +14,6 @@
       <h1>Notes Manager</h1>
       <div class="tools">
         <input id="search" type="search" placeholder="Search notes...">
-
-        <!-- Tag Filter UI -->
-        <select id="tagFilter" data-testid="tagFilter" class="tag-dropdown">
-          <option value="">All tags</option>
-        </select>
-        <button id="clearTagFilter" data-testid="clearTagFilter" type="button">Reset</button>
       </div>
     </div>
   </header>
@@ -49,6 +43,11 @@
       <div class="notes-header">
         <h2><span id="notebookName"></span></h2>
         <div>
+          <select id="tagFilter" data-testid="tagFilter" class="tag-dropdown" multiple size="1">
+            <option value="">All tags</option>
+          </select>
+          <button id="clearTagFilter" data-testid="clearTagFilter" type="button">Reset</button>
+
           <button id="cancelEditButton" class="cancel-button hidden">Cancel</button>
           <button id="addNoteInSection" data-testid="addNoteInSection" class="main-button">+ Add Note</button>
         </div>
