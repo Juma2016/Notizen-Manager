@@ -176,6 +176,17 @@ function viewNoteContent(note) {
 
   contentElement.textContent = String(note.content || "");
   document.getElementById("noteContentView")?.classList.remove("hidden");
+  if (note.title.length > maxLength) {
+    titleElement.textContent = note.title.substring(0, maxLength) + "...";
+    titleElement.title = note.title;
+  } else {
+    titleElement.textContent = note.title;
+    titleElement.title = "";
+  }
+
+  contentElement.textContent = note.content;
+
+  document.getElementById("noteContentView").classList.remove("hidden");
 }
 
 function closeNoteView() {
@@ -205,7 +216,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-
 fetch("http://localhost:3000/api/notebooks")
   .then((r) => r.json())
   .then((data) => {
@@ -219,7 +229,9 @@ fetch("http://localhost:3000/api/notebooks")
     });
   })
   .catch(() => {
-    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
     if (reload) location.reload();
   });
 
