@@ -11,7 +11,6 @@ const tagsInput = document.getElementById("tags");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 
-
 const tagFilter = document.getElementById("tagFilter");
 const clearTagFilter = document.getElementById("clearTagFilter");
 
@@ -27,8 +26,7 @@ notes.forEach((n) => {
 let selectedNotebookId = null;
 let editNoteId = null;
 
-
-let selectedTag = "";
+const selectedTags = new Set();
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
@@ -81,7 +79,6 @@ function getAllTags() {
 function renderTagDropdown() {
   if (!tagFilter) return;
 
-  const currentValue = tagFilter.value; 
   tagFilter.innerHTML = `<option value="">All tags</option>`;
 
   const allTags = getAllTags();
@@ -92,7 +89,18 @@ function renderTagDropdown() {
     tagFilter.appendChild(opt);
   });
 
-  tagFilter.value = currentValue;
+  const allowed = new Set(allTags);
+  for (const t of Array.from(selectedTags)) {
+    if (!allowed.has(t)) selectedTags.delete(t);
+  }
+
+  Array.from(tagFilter.options).forEach((opt) => {
+    if (opt.value === "") {
+      opt.selected = selectedTags.size === 0;
+    } else {
+      opt.selected = selectedTags.has(opt.value);
+    }
+  });
 }
 
 notebookDropdown.addEventListener("change", () => {
@@ -112,23 +120,37 @@ notebookDropdown.addEventListener("change", () => {
   addNoteInSection.style.display = "block";
   searchInput.value = "";
 
-
   renderTagDropdown();
   renderNotes();
 });
 
-
 if (tagFilter) {
   tagFilter.addEventListener("change", () => {
-    selectedTag = tagFilter.value;
+    selectedTags.clear();
+    Array.from(tagFilter.options).forEach((opt) => {
+      if (opt.value && opt.selected) selectedTags.add(opt.value);
+    });
+
+    const allOpt = tagFilter.querySelector('option[value=""]');
+    if (allOpt) {
+      const anyRealSelected = Array.from(tagFilter.options).some(
+        (o) => o.value !== "" && o.selected
+      );
+      allOpt.selected = !anyRealSelected;
+    }
+
     renderNotes();
   });
 }
 
 if (clearTagFilter) {
   clearTagFilter.addEventListener("click", () => {
-    selectedTag = "";
-    if (tagFilter) tagFilter.value = "";
+    selectedTags.clear();
+    if (tagFilter) {
+      Array.from(tagFilter.options).forEach((o) => (o.selected = false));
+      const allOpt = tagFilter.querySelector('option[value=""]');
+      if (allOpt) allOpt.selected = true;
+    }
     renderNotes();
   });
 }
@@ -149,11 +171,14 @@ function renderNotes() {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
   }
 
-
-  if (selectedTag) {
-    filteredNotes = filteredNotes.filter(
-      (n) => Array.isArray(n.tags) && n.tags.includes(selectedTag)
-    );
+  if (selectedTags.size > 0) {
+    filteredNotes = filteredNotes.filter((n) => {
+      const ntags = Array.isArray(n.tags) ? n.tags : [];
+      for (const t of selectedTags) {
+        if (!ntags.includes(t)) return false;
+      }
+      return true;
+    });
   }
 
   if (filteredNotes.length === 0) {
@@ -246,7 +271,7 @@ function openCreate() {
 function openEdit(note) {
   editNoteId = note.id;
   titleInput.value = note.title;
-  contentInput.value = note.content;
+  contentInput.value = string(note.content);
   tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   modal.classList.remove("hidden");
 }
@@ -292,7 +317,6 @@ noteForm.addEventListener("submit", (e) => {
   saveNotes();
   closeModal();
 
-
   renderTagDropdown();
   renderNotes();
 });
@@ -301,7 +325,6 @@ function deleteNote(id) {
   notes = notes.filter((n) => n.id !== id);
   saveNotes();
 
- 
   renderTagDropdown();
   renderNotes();
 }
