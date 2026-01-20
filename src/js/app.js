@@ -101,7 +101,7 @@ function renderTagDropdown() {
 
 if (tagFilter) {
   tagFilter.addEventListener("mousedown", (e) => {
-    if (e.target.tagName === "OPTION") {
+    if (e.target && e.target.tagName === "OPTION") {
       lastTagClickValue = e.target.value;
     }
   });
@@ -109,12 +109,11 @@ if (tagFilter) {
   tagFilter.addEventListener("change", () => {
     const allOpt = tagFilter.querySelector('option[value=""]');
 
+    // toggle "All tags" mode
     if (lastTagClickValue === "" && allOpt) {
       allMode = !allMode;
       selectedTags.clear();
-      Array.from(tagFilter.options).forEach(
-        (o) => (o.selected = allMode)
-      );
+      Array.from(tagFilter.options).forEach((o) => (o.selected = allMode));
       lastTagClickValue = null;
       renderNotes();
       return;
@@ -138,7 +137,7 @@ function formatDate(ts) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   });
 }
 
@@ -159,16 +158,69 @@ function highlightText(text, q) {
 }
 
 
+function viewNoteContent(note) {
+  const titleElement = document.getElementById("viewNoteTitle");
+  const contentElement = document.getElementById("viewNoteContent");
+
+  if (!titleElement || !contentElement) return;
+
+  const maxLength = 60;
+  const title = String(note.title || "");
+  if (title.length > maxLength) {
+    titleElement.textContent = title.substring(0, maxLength) + "...";
+    titleElement.title = title;
+  } else {
+    titleElement.textContent = title;
+    titleElement.title = "";
+  }
+
+  contentElement.textContent = String(note.content || "");
+  document.getElementById("noteContentView")?.classList.remove("hidden");
+}
+
+function closeNoteView() {
+  document.getElementById("noteContentView")?.classList.add("hidden");
+}
+
+const closeBtn = document.getElementById("closeNoteView");
+if (closeBtn) {
+  closeBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeNoteView();
+  });
+}
+
+const noteView = document.getElementById("noteContentView");
+if (noteView) {
+  noteView.addEventListener("click", function (e) {
+    if (e.target === this) closeNoteView();
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  const v = document.getElementById("noteContentView");
+  if (e.key === "Escape" && v && !v.classList.contains("hidden")) {
+    closeNoteView();
+  }
+});
+
+
 fetch("http://localhost:3000/api/notebooks")
   .then((r) => r.json())
   .then((data) => {
     notebooks = data;
+
     notebooks.forEach((nb) => {
       const o = document.createElement("option");
       o.value = nb.id;
       o.textContent = nb.title;
       notebookDropdown.appendChild(o);
     });
+  })
+  .catch(() => {
+    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    if (reload) location.reload();
   });
 
 
@@ -180,27 +232,36 @@ function renderNotes() {
     ? notes.filter((n) => n.notebookId === selectedNotebookId)
     : [...notes];
 
+  // search filter
   if (q) {
     filtered = filtered.filter(
       (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
+        String(n.title || "").toLowerCase().includes(q) ||
+        String(n.content || "").toLowerCase().includes(q)
     );
   }
 
+  // tag filter (AND)
   if (!allMode && selectedTags.size > 0) {
     filtered = filtered.filter((n) =>
-      [...selectedTags].every((t) => n.tags.includes(t))
+      [...selectedTags].every((t) => (Array.isArray(n.tags) ? n.tags : []).includes(t))
     );
   }
 
   if (filtered.length > 0) {
-    const [type, order] = currentSort.split("-");
+    const [type, order] = (currentSort || "date-desc").split("-");
     filtered = sortNotes(filtered, type, order);
   }
 
   if (filtered.length === 0) {
-    notesList.innerHTML = `<p class="no-results">Keine Ergebnisse</p>`;
+    if (q) {
+      notesList.innerHTML = '<p class="no-results">Keine Ergebnisse gefunden</p>';
+    } else if (selectedNotebookId) {
+      notesList.innerHTML =
+        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+    } else {
+      notesList.innerHTML = '<p class="no-results">Keine Notizen vorhanden</p>';
+    }
     return;
   }
 
@@ -208,10 +269,12 @@ function renderNotes() {
     const div = document.createElement("div");
     div.className = "note-item";
 
+    div.addEventListener("click", () => viewNoteContent(note));
+
     div.innerHTML = `
       <div class="note-header">
         <div>
-          <strong>${highlightText(note.title, q)}</strong>
+          <strong data-testid="note-title">${highlightText(note.title || "", q)}</strong>
           <p class="note-date">${formatDate(note.updatedAt)}</p>
         </div>
         <div class="note-actions">
@@ -219,18 +282,28 @@ function renderNotes() {
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p>${highlightText(note.content, q)}</p>
+
+      <p data-testid="note-content">${highlightText(note.content || "", q)}</p>
+
       ${
-        note.tags.length
-          ? `<p class="note-tags">${note.tags
+        Array.isArray(note.tags) && note.tags.length
+          ? `<p class="note-tags" data-testid="note-tags">${note.tags
               .map((t) => `#${escapeHtml(t)}`)
               .join(" ")}</p>`
           : ""
       }
     `;
 
-    div.querySelector(".edit-note").onclick = () => openEdit(note);
-    div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+    // prevent bubbling when clicking buttons
+    div.querySelector(".edit-note").addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEdit(note);
+    });
+
+    div.querySelector(".delete-note").addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteNote(note.id);
+    });
 
     notesList.appendChild(div);
   });
@@ -238,28 +311,56 @@ function renderNotes() {
 
 
 searchInput.addEventListener("input", () => {
-  if (!selectedNotebookId && !searchInput.value) {
+  const hasSearch = !!searchInput.value.trim();
+
+  if (!selectedNotebookId && !hasSearch) {
     notesSection.classList.add("hidden");
     return;
   }
-  notesSection.classList.remove("hidden");
+
+  if (!selectedNotebookId && hasSearch) {
+    notesSection.classList.remove("hidden");
+    notebookName.textContent = "Suchergebnisse";
+    addNoteInSection.style.display = "none";
+  }
+
+  if (selectedNotebookId && hasSearch) {
+    addNoteInSection.style.display = "none";
+  }
+
+  if (selectedNotebookId && !hasSearch) {
+    addNoteInSection.style.display = "block";
+    const nb = notebooks.find((n) => n.id === selectedNotebookId);
+    notebookName.textContent = nb?.title || "Notizbuch";
+  }
+
   renderNotes();
 });
 
 notebookDropdown.addEventListener("change", () => {
   selectedNotebookId = notebookDropdown.value || null;
+
   if (!selectedNotebookId) {
     notesSection.classList.add("hidden");
+    searchInput.value = "";
+    addNoteInSection.style.display = "block";
     return;
   }
+
   const nb = notebooks.find((n) => n.id === selectedNotebookId);
   notebookName.textContent = nb?.title || "";
   notesSection.classList.remove("hidden");
+  addNoteInSection.style.display = "block";
+
   renderTagDropdown();
   renderNotes();
 });
 
 addNoteInSection.onclick = () => {
+  if (!selectedNotebookId) {
+    alert("Bitte wähle zuerst ein Notizbuch aus");
+    return;
+  }
   editNoteId = null;
   noteForm.reset();
   modal.classList.remove("hidden");
@@ -270,14 +371,21 @@ cancelButton.onclick = () => modal.classList.add("hidden");
 
 function openEdit(note) {
   editNoteId = note.id;
-  titleInput.value = note.title;
-  contentInput.value = note.content;
-  tagsInput.value = note.tags.join(", ");
+  titleInput.value = note.title || "";
+  contentInput.value = note.content || "";
+  tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   modal.classList.remove("hidden");
 }
 
 noteForm.addEventListener("submit", (e) => {
   e.preventDefault();
+
+  if (!titleInput.value || !contentInput.value) return;
+
+  if (!selectedNotebookId) {
+    alert("Bitte wähle zuerst ein Notizbuch aus");
+    return;
+  }
 
   const tags = tagsInput.value
     .split(",")
@@ -286,6 +394,8 @@ noteForm.addEventListener("submit", (e) => {
 
   if (editNoteId) {
     const n = notes.find((x) => x.id === editNoteId);
+    if (!n) return;
+
     n.title = titleInput.value;
     n.content = contentInput.value;
     n.tags = tags;
@@ -297,7 +407,7 @@ noteForm.addEventListener("submit", (e) => {
       title: titleInput.value,
       content: contentInput.value,
       tags,
-      updatedAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
