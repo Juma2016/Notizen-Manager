@@ -346,3 +346,7 @@ function deleteNote(id) {
 function saveNotes() {
   localStorage.setItem("notes", JSON.stringify(notes));
 }
+searchInput.addEventListener("input", (e) => {
+  const query =e.target.value;
+  console.log("Search query:", query);
+});
