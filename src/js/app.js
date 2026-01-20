@@ -11,6 +11,10 @@ const tagsInput = document.getElementById("tags");
 const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 
+
+const tagFilter = document.getElementById("tagFilter");
+const clearTagFilter = document.getElementById("clearTagFilter");
+
 let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
 
@@ -22,6 +26,9 @@ notes.forEach((n) => {
 
 let selectedNotebookId = null;
 let editNoteId = null;
+
+
+let selectedTag = "";
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
@@ -58,6 +65,36 @@ function fillNotebookDropdown() {
   });
 }
 
+function getAllTags() {
+  const set = new Set();
+  notes.forEach((n) => {
+    if (Array.isArray(n.tags)) {
+      n.tags.forEach((t) => {
+        const clean = String(t).trim();
+        if (clean) set.add(clean);
+      });
+    }
+  });
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+function renderTagDropdown() {
+  if (!tagFilter) return;
+
+  const currentValue = tagFilter.value; 
+  tagFilter.innerHTML = `<option value="">All tags</option>`;
+
+  const allTags = getAllTags();
+  allTags.forEach((t) => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = `#${t}`;
+    tagFilter.appendChild(opt);
+  });
+
+  tagFilter.value = currentValue;
+}
+
 notebookDropdown.addEventListener("change", () => {
   const selectedValue = notebookDropdown.value;
 
@@ -75,8 +112,26 @@ notebookDropdown.addEventListener("change", () => {
   addNoteInSection.style.display = "block";
   searchInput.value = "";
 
+
+  renderTagDropdown();
   renderNotes();
 });
+
+
+if (tagFilter) {
+  tagFilter.addEventListener("change", () => {
+    selectedTag = tagFilter.value;
+    renderNotes();
+  });
+}
+
+if (clearTagFilter) {
+  clearTagFilter.addEventListener("click", () => {
+    selectedTag = "";
+    if (tagFilter) tagFilter.value = "";
+    renderNotes();
+  });
+}
 
 function renderNotes() {
   notesList.innerHTML = "";
@@ -92,6 +147,13 @@ function renderNotes() {
     );
   } else {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
+  }
+
+
+  if (selectedTag) {
+    filteredNotes = filteredNotes.filter(
+      (n) => Array.isArray(n.tags) && n.tags.includes(selectedTag)
+    );
   }
 
   if (filteredNotes.length === 0) {
@@ -119,7 +181,13 @@ function renderNotes() {
         </div>
       </div>
       <p data-testid="note-content">${note.content}</p>
-      ${note.tags && note.tags.length ? `<p class="note-tags" data-testid="note-tags">${note.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
+      ${
+        note.tags && note.tags.length
+          ? `<p class="note-tags" data-testid="note-tags">${note.tags
+              .map((t) => `#${t}`)
+              .join(" ")}</p>`
+          : ""
+      }
     `;
 
       div.querySelector(".edit-note").onclick = () => openEdit(note);
@@ -154,55 +222,7 @@ searchInput.addEventListener("input", () => {
     notebookName.textContent = nb.title;
   }
 
-  let filtered;
-
-  if (q) {
-    filtered = notes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q),
-    );
-  } else {
-    filtered = notes.filter((n) => n.notebookId === selectedNotebookId);
-  }
-
-  notesList.innerHTML = "";
-
-  if (filtered.length === 0) {
-    if (q) {
-      notesList.innerHTML =
-        '<p class="no-results">Keine Ergebnisse gefunden</p>';
-    } else if (selectedNotebookId) {
-      notesList.innerHTML =
-        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
-    }
-    return;
-  }
-
-  filtered.forEach((n) => {
-    const div = document.createElement("div");
-    div.className = "note-item";
-
-    div.innerHTML = `
-      <div class="note-header">
-        <div>
-          <strong data-testid="note-title">${n.title}</strong>
-          <p class="note-date">${formatDate(n.updatedAt)}</p>
-        </div>
-        <div class="note-actions">
-          <button class="edit-note">Edit</button>
-          <button class="delete-note">Delete</button>
-        </div>
-      </div>
-      <p data-testid="note-content">${n.content}</p>
-      ${n.tags && n.tags.length ? `<p class="note-tags" data-testid="note-tags">${n.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
-    `;
-
-    div.querySelector(".edit-note").onclick = () => openEdit(n);
-    div.querySelector(".delete-note").onclick = () => deleteNote(n.id);
-
-    notesList.appendChild(div);
-  });
+  renderNotes();
 });
 
 addNoteInSection.onclick = () => {
@@ -246,7 +266,7 @@ noteForm.addEventListener("submit", (e) => {
   }
 
   const tagsArray = tagsInput.value
-    .split(" ")
+    .split(",")
     .map((t) => t.trim())
     .filter((t) => t.length > 0);
 
@@ -271,12 +291,18 @@ noteForm.addEventListener("submit", (e) => {
 
   saveNotes();
   closeModal();
+
+
+  renderTagDropdown();
   renderNotes();
 });
 
 function deleteNote(id) {
   notes = notes.filter((n) => n.id !== id);
   saveNotes();
+
+ 
+  renderTagDropdown();
   renderNotes();
 }
 
