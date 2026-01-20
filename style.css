@@ -423,7 +423,8 @@ button:hover {
   padding-bottom: 15px;
   flex-shrink: 0;
 }
-/* Titel mit Zeichenbegrenzung */
+
+/* Title with character limit */
 .note-title-truncated {
   color: #e8eefc;
   font-size: 1.5rem;
@@ -432,14 +433,40 @@ button:hover {
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
-  max-width: 80%;
+  flex: 1;
+  margin-right: 15px;
   line-height: 1.4;
   
-  /* FESTE Zeichenbegrenzung */
+  /* FIXED character limit */
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; /* WICHTIG: Kein Zeilenumbruch */
+  white-space: nowrap; /* IMPORTANT: No line break */
   display: block;
+}
+
+/* Close Button in Note View */
+#closeNoteView {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 28px;
+  padding: 0;
+  margin: 0;
+  width: 40px;
+  height: 40px;
+  min-width: auto;
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+#closeNoteView:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .note-content-wrapper {
@@ -465,7 +492,7 @@ button:hover {
   padding: 0;
 }
 
-
+@media (max-width: 768px) {
   .note-content-box {
     padding: 20px;
     margin: 10px;
@@ -473,17 +500,23 @@ button:hover {
   }
   
   .note-content-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
   }
   
   .note-title-truncated {
-    max-width: 100%;
+    max-width: calc(100% - 50px);
     font-size: 1.3rem;
-    text-align: center;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   #closeNoteView {
-    align-self: center;
+    font-size: 28px;
+    width: 40px;
+    height: 40px;
   }
+}

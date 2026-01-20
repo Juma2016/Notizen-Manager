@@ -15,7 +15,7 @@ let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let selectedNotebookId = null;
 let editNoteId = null;
-let currentSort = "date-desc"; 
+let currentSort = "date-desc";
 
 function sortNotes(notesArray, sortType, order) {
   if (!notesArray || notesArray.length === 0) return notesArray;
@@ -56,21 +56,22 @@ function formatDate(timestamp) {
     second: "2-digit",
   });
 }
+
 function viewNoteContent(note) {
   const titleElement = document.getElementById("viewNoteTitle");
   const contentElement = document.getElementById("viewNoteContent");
-  
+
   const maxLength = 60;
   if (note.title.length > maxLength) {
-    titleElement.textContent = note.title.substring(0, maxLength) + '...';
+    titleElement.textContent = note.title.substring(0, maxLength) + "...";
     titleElement.title = note.title;
   } else {
     titleElement.textContent = note.title;
-    titleElement.title = '';
+    titleElement.title = "";
   }
-  
+
   contentElement.textContent = note.content;
-  
+
   document.getElementById("noteContentView").classList.remove("hidden");
 }
 
@@ -78,20 +79,27 @@ function closeNoteView() {
   document.getElementById("noteContentView").classList.add("hidden");
 }
 
-document.getElementById("closeNoteView").addEventListener('click', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  closeNoteView();
-});
-
-document.getElementById("noteContentView").addEventListener('click', function(e) {
-  if (e.target === this) {
+document
+  .getElementById("closeNoteView")
+  .addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
     closeNoteView();
-  }
-});
+  });
 
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && !document.getElementById("noteContentView").classList.contains("hidden")) {
+document
+  .getElementById("noteContentView")
+  .addEventListener("click", function (e) {
+    if (e.target === this) {
+      closeNoteView();
+    }
+  });
+
+document.addEventListener("keydown", function (e) {
+  if (
+    e.key === "Escape" &&
+    !document.getElementById("noteContentView").classList.contains("hidden")
+  ) {
     closeNoteView();
   }
 });
@@ -103,7 +111,9 @@ fetch("http://localhost:3000/api/notebooks")
     fillNotebookDropdown();
   })
   .catch(() => {
-    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
     if (reload) location.reload();
   });
 
@@ -192,7 +202,7 @@ function renderNotes() {
   filteredNotes.forEach((note) => {
     const div = document.createElement("div");
     div.className = "note-item";
-    div.addEventListener('click', () => viewNoteContent(note));
+    div.addEventListener("click", () => viewNoteContent(note));
 
     div.innerHTML = `
       <div class="note-header">
@@ -212,12 +222,12 @@ function renderNotes() {
       </p>
     `;
 
-    div.querySelector(".edit-note").addEventListener('click', (e) => {
+    div.querySelector(".edit-note").addEventListener("click", (e) => {
       e.stopPropagation();
       openEdit(note);
     });
 
-    div.querySelector(".delete-note").addEventListener('click', (e) => {
+    div.querySelector(".delete-note").addEventListener("click", (e) => {
       e.stopPropagation();
       deleteNote(note.id);
     });
