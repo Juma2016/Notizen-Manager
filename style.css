@@ -356,3 +356,41 @@ button:hover {
   line-height: 1.4;
   word-wrap: break-word;
 }
+/* --- Tag Filter UI inside notes header --- */
+.notes-header > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Make tag dropdown match dark theme */
+.tag-dropdown {
+  padding: 10px 14px;
+  border: 1px solid #2a3347;
+  border-radius: 12px;
+  background: #151922;
+  color: #e8eefc;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.tag-dropdown:focus {
+  border-color: #4f8cff;
+  outline: none;
+}
+
+
+#clearTagFilter {
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+.tag-dropdown {
+  color: #e8eefc;
+  background: #151922;
+}
+
+.tag-dropdown option {
+  color: #111;
+  background: #fff;
+}
