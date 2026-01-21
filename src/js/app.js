@@ -112,7 +112,10 @@ function renderNotes() {
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p data-testid="note-content">${note.content}</p>
+      <div class="note-content">
+       <p data-testid="note-content">${note.content}</p>
+       <button class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}" onClick={showVersions(${note.id})}>Versions</button>
+      </div>
     `;
 
       div.querySelector(".edit-note").onclick = () => openEdit(note);
@@ -196,6 +199,16 @@ searchInput.addEventListener("input", () => {
     notesList.appendChild(div);
   });
 });
+
+function showVersions(noteId) {
+  const noteToEdit = notes.filter((note) => note.id == noteId)[0];
+  if (noteToEdit.versions.length <= 0) {
+    alert("No Versions!");
+    return;
+  }
+
+  console.log(noteToEdit.versions);
+}
 
 addNoteInSection.onclick = () => {
   if (!selectedNotebookId) {
