@@ -12,21 +12,20 @@ const cancelButton = document.getElementById("cancelButton");
 const searchInput = document.getElementById("search");
 
 const tagFilter = document.getElementById("tagFilter");
-const clearTagFilter = document.getElementById("clearTagFilter");
 
 let notebooks = [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
 
 notes.forEach((n) => {
-  if (!Array.isArray(n.tags)) {
-    n.tags = [];
-  }
+  if (!Array.isArray(n.tags)) n.tags = [];
 });
 
 let selectedNotebookId = null;
 let editNoteId = null;
 
 const selectedTags = new Set();
+let allMode = false;
+let lastTagClickValue = null;
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
@@ -49,9 +48,7 @@ fetch("http://localhost:3000/api/notebooks")
   })
   .catch(() => {
     const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
-    if (reload) {
-      location.reload();
-    }
+    if (reload) location.reload();
   });
 
 function fillNotebookDropdown() {
@@ -94,12 +91,19 @@ function renderTagDropdown() {
     if (!allowed.has(t)) selectedTags.delete(t);
   }
 
+  const allOpt = tagFilter.querySelector('option[value=""]');
+
+  if (allMode) {
+    if (allOpt) allOpt.selected = true;
+    Array.from(tagFilter.options).forEach((opt) => {
+      if (opt.value !== "") opt.selected = true;
+    });
+    return;
+  }
+
+  if (allOpt) allOpt.selected = false;
   Array.from(tagFilter.options).forEach((opt) => {
-    if (opt.value === "") {
-      opt.selected = selectedTags.size === 0;
-    } else {
-      opt.selected = selectedTags.has(opt.value);
-    }
+    if (opt.value !== "") opt.selected = selectedTags.has(opt.value);
   });
 }
 
@@ -125,32 +129,45 @@ notebookDropdown.addEventListener("change", () => {
 });
 
 if (tagFilter) {
+  tagFilter.addEventListener("mousedown", (e) => {
+    if (e.target && e.target.tagName === "OPTION") {
+      lastTagClickValue = e.target.value;
+    }
+  });
+
   tagFilter.addEventListener("change", () => {
+    const allOpt = tagFilter.querySelector('option[value=""]');
+
+    if (lastTagClickValue === "" && allOpt) {
+      if (!allMode) {
+        allMode = true;
+        selectedTags.clear();
+        allOpt.selected = true;
+        Array.from(tagFilter.options).forEach((opt) => {
+          if (opt.value !== "") opt.selected = true;
+        });
+      } else {
+        allMode = false;
+        selectedTags.clear();
+        Array.from(tagFilter.options).forEach((opt) => (opt.selected = false));
+      }
+
+      lastTagClickValue = null;
+      renderNotes();
+      return;
+    }
+
+    if (allMode) {
+      allMode = false;
+      if (allOpt) allOpt.selected = false;
+    }
+
     selectedTags.clear();
     Array.from(tagFilter.options).forEach((opt) => {
       if (opt.value && opt.selected) selectedTags.add(opt.value);
     });
 
-    const allOpt = tagFilter.querySelector('option[value=""]');
-    if (allOpt) {
-      const anyRealSelected = Array.from(tagFilter.options).some(
-        (o) => o.value !== "" && o.selected
-      );
-      allOpt.selected = !anyRealSelected;
-    }
-
-    renderNotes();
-  });
-}
-
-if (clearTagFilter) {
-  clearTagFilter.addEventListener("click", () => {
-    selectedTags.clear();
-    if (tagFilter) {
-      Array.from(tagFilter.options).forEach((o) => (o.selected = false));
-      const allOpt = tagFilter.querySelector('option[value=""]');
-      if (allOpt) allOpt.selected = true;
-    }
+    lastTagClickValue = null;
     renderNotes();
   });
 }
@@ -165,13 +182,13 @@ function renderNotes() {
     filteredNotes = notes.filter(
       (n) =>
         n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchTerm.toLowerCase()),
+        n.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
   } else {
     filteredNotes = notes.filter((n) => n.notebookId === selectedNotebookId);
   }
 
-  if (selectedTags.size > 0) {
+  if (!allMode && selectedTags.size > 0) {
     filteredNotes = filteredNotes.filter((n) => {
       const ntags = Array.isArray(n.tags) ? n.tags : [];
       for (const t of selectedTags) {
@@ -183,18 +200,18 @@ function renderNotes() {
 
   if (filteredNotes.length === 0) {
     if (searchTerm) {
-      notesList.innerHTML =
-        '<p class="no-results">Keine Ergebnisse gefunden</p>';
+      notesList.innerHTML = '<p class="no-results">Keine Ergebnisse gefunden</p>';
     } else if (selectedNotebookId) {
-      notesList.innerHTML =
-        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+      notesList.innerHTML = '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
     }
-  } else {
-    filteredNotes.forEach((note) => {
-      const div = document.createElement("div");
-      div.className = "note-item";
+    return;
+  }
 
-      div.innerHTML = `
+  filteredNotes.forEach((note) => {
+    const div = document.createElement("div");
+    div.className = "note-item";
+
+    div.innerHTML = `
       <div class="note-header">
         <div>
           <strong data-testid="note-title">${note.title}</strong>
@@ -208,19 +225,16 @@ function renderNotes() {
       <p data-testid="note-content">${note.content}</p>
       ${
         note.tags && note.tags.length
-          ? `<p class="note-tags" data-testid="note-tags">${note.tags
-              .map((t) => `#${t}`)
-              .join(" ")}</p>`
+          ? `<p class="note-tags" data-testid="note-tags">${note.tags.map((t) => `#${t}`).join(" ")}</p>`
           : ""
       }
     `;
 
-      div.querySelector(".edit-note").onclick = () => openEdit(note);
-      div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+    div.querySelector(".edit-note").onclick = () => openEdit(note);
+    div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
 
-      notesList.appendChild(div);
-    });
-  }
+    notesList.appendChild(div);
+  });
 }
 
 searchInput.addEventListener("input", () => {
@@ -271,7 +285,7 @@ function openCreate() {
 function openEdit(note) {
   editNoteId = note.id;
   titleInput.value = note.title;
-  contentInput.value = string(note.content);
+  contentInput.value = note.content;
   tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   modal.classList.remove("hidden");
 }
@@ -310,7 +324,7 @@ noteForm.addEventListener("submit", (e) => {
       notebookId: selectedNotebookId,
       title: titleInput.value,
       content: contentInput.value,
-      updatedAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
