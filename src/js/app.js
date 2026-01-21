@@ -328,6 +328,10 @@ function renderNotes() {
               .join(" ")}</p>`
           : ""
       }
+      <div class="note-content">
+       <p data-testid="note-content">${note.content}</p>
+       <button class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}" onClick={showVersions(${note.id})}>Versions</button>
+      </div>
     `;
 
     // prevent bubbling when clicking buttons
@@ -391,6 +395,16 @@ notebookDropdown.addEventListener("change", () => {
   renderTagDropdown();
   renderNotes();
 });
+
+function showVersions(noteId) {
+  const noteToEdit = notes.filter((note) => note.id == noteId)[0];
+  if (noteToEdit.versions.length <= 0) {
+    alert("No Versions!");
+    return;
+  }
+
+  console.log(noteToEdit.versions);
+}
 
 addNoteInSection.onclick = () => {
   if (!selectedNotebookId) {
