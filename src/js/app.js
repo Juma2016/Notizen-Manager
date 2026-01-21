@@ -150,6 +150,30 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
+fetch("http://localhost:3000/api/notebooks")
+  .then((res) => res.json())
+  .then((data) => {
+    notebooks = data;
+    fillNotebookDropdown();
+  })
+  .catch(() => {
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
+    if (reload) {
+      location.reload();
+    }
+  });
+
+function fillNotebookDropdown() {
+  notebooks.forEach((nb) => {
+    const option = document.createElement("option");
+    option.value = nb.id;
+    option.textContent = nb.title;
+    notebookDropdown.appendChild(option);
+  });
+}
+
 function highlightText(text, q) {
   const safe = escapeHtml(text);
   if (!q) return safe;
@@ -473,6 +497,18 @@ noteForm.addEventListener("submit", (e) => {
     n.content = contentInput.value;
     n.tags = tags;
     n.updatedAt = Date.now();
+    const note = notes.find((n) => n.id === editNoteId);
+    note.versions.push({
+      versionId: note.versions.length,
+      id: note.id,
+      notebookId: note.notebookId,
+      title: note.title,
+      content: note.content,
+      updatedAt: note.updatedAt,
+    });
+    note.title = titleInput.value;
+    note.content = contentInput.value;
+    note.updatedAt = Date.now();
   } else {
     notes.push({
       id: Date.now().toString(),
@@ -480,7 +516,8 @@ noteForm.addEventListener("submit", (e) => {
       title: titleInput.value,
       content: contentInput.value,
       tags,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      versions: [],
     });
   }
 
