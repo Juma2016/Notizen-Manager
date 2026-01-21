@@ -24,7 +24,7 @@ function formatDate(timestamp) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit"
+    second: "2-digit",
   });
 }
 
@@ -35,7 +35,9 @@ fetch("http://localhost:3000/api/notebooks")
     fillNotebookDropdown();
   })
   .catch(() => {
-    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
     if (reload) {
       location.reload();
     }
@@ -235,6 +237,14 @@ noteForm.addEventListener("submit", (e) => {
 
   if (editNoteId) {
     const note = notes.find((n) => n.id === editNoteId);
+    note.versions.push({
+      versionId: note.versions.length,
+      id: note.id,
+      notebookId: note.notebookId,
+      title: note.title,
+      content: note.content,
+      updatedAt: note.updatedAt,
+    });
     note.title = titleInput.value;
     note.content = contentInput.value;
     note.updatedAt = Date.now();
@@ -245,6 +255,7 @@ noteForm.addEventListener("submit", (e) => {
       title: titleInput.value,
       content: contentInput.value,
       updatedAt: Date.now(),
+      versions: [],
     });
   }
 
