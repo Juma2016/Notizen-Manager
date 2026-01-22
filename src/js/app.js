@@ -330,7 +330,11 @@ function renderNotes() {
       }
       <div class="note-content">
        <p data-testid="note-content">${note.content}</p>
-       <button class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}" onClick={showVersions(${note.id})}>Versions</button>
+       <div style="display: flex; flex-direction: column; margin-left:auto; justify-content:center; align-content:center"> 
+          <p style="text-center; margin-bottom: 4px">Versions: </p>
+          <select class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}">
+          ${showVersions(note.id)}
+          </select>
       </div>
     `;
 
@@ -338,6 +342,20 @@ function renderNotes() {
     div.querySelector(".edit-note").addEventListener("click", (e) => {
       e.stopPropagation();
       openEdit(note);
+      div.querySelector(".edit-note").onclick = () => openEdit(note);
+      div.querySelector(".delete-note").onclick = () => deleteNote(note.id);
+
+      const versionSelect = div.querySelector(".note-version");
+      versionSelect.addEventListener("change", (e) => {
+        const versionId = e.target.value;
+        const version = note.versions.find((v) => v.versionId == versionId);
+        if (version) {
+          openEdit(version);
+          versionSelect.value = "";
+        }
+      });
+
+      notesList.appendChild(div);
     });
 
     div.querySelector(".delete-note").addEventListener("click", (e) => {
@@ -397,13 +415,19 @@ notebookDropdown.addEventListener("change", () => {
 });
 
 function showVersions(noteId) {
-  const noteToEdit = notes.filter((note) => note.id == noteId)[0];
-  if (noteToEdit.versions.length <= 0) {
-    alert("No Versions!");
-    return;
+  const noteToEdit = notes.find((note) => note.id == noteId);
+  if (!noteToEdit || noteToEdit.versions.length <= 0) {
+    return "";
   }
 
-  console.log(noteToEdit.versions);
+  return (
+    `<option value="">Versions</option>` +
+    noteToEdit.versions
+      .map(
+        (val) => `<option value="${val.versionId}">Version ${val.versionId}</option>`,
+      )
+      .join("")
+  );
 }
 
 addNoteInSection.onclick = () => {
@@ -513,7 +537,7 @@ noteForm.addEventListener("submit", (e) => {
     n.updatedAt = Date.now();
     const note = notes.find((n) => n.id === editNoteId);
     note.versions.push({
-      versionId: note.versions.length,
+      versionId: note.versions.length + 1,
       id: note.id,
       notebookId: note.notebookId,
       title: note.title,
