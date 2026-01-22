@@ -217,11 +217,8 @@ function renderNotes() {
           <button class="delete-note">Delete</button>
         </div>
       </div>
-      <p data-testid="note-content">
-        ${highlightText(note.content, searchTerm)}
-      </p>
        <div class="note-content">
-       <p data-testid="note-content">${note.content}</p>
+       <p data-testid="note-content">${highlightText(note.content, searchTerm)}</p>
        <div class="version-wrapper"> 
           <p class="version-label">Versions: </p>
           <select name="Version Selector" class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}">
