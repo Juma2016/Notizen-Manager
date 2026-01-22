@@ -211,14 +211,17 @@ button:hover {
   border-radius: 6px;
   background-color: #2f6ef0;
   border: 1px solid #4f8cff;
-  margin-left: auto;
-  width: 4.5rem;
+  width: 6rem;
   height: 2rem;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: start;
 }
 
 .note-no-version {
   background-color: #151922;
    border: 1px solid #1e283a;
+   color: #ffffff;
 }
 
 .edit-note {
