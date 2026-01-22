@@ -142,7 +142,7 @@ button:hover {
 /* Sort Controls */
 .sort-controls {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
   white-space: nowrap;
   margin-top: 20px;
@@ -221,6 +221,47 @@ button:hover {
   border-radius: 6px;
 }
 
+.note-content {
+  display: flex;
+}
+
+.note-version {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  background-color: #2f6ef0;
+  border: 1px solid #4f8cff;
+  width: 6rem;
+  height: 2rem;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: start;
+}
+
+.note-no-version {
+  background-color: #151922;
+   border: 1px solid #1e283a;
+   color: #ffffff;
+}
+
+.version-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  justify-content: center;
+  align-content: center;
+}
+
+.version-label {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.version-option {
+  font-weight: bold;
+  padding: 0.75rem;
+}
+
 .edit-note {
   background: #2a3347;
   border: 1px solid #4f8cff;
@@ -249,6 +290,10 @@ button:hover {
   align-items: center;
   z-index: 1000;
   padding: 20px;
+}
+
+#modalTitle {
+  margin-bottom: 1rem;
 }
 
 .modal-box {

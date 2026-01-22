@@ -17,6 +17,19 @@ let selectedNotebookId = null;
 let editNoteId = null;
 let currentSort = "date-desc";
 
+fetch("http://localhost:3000/api/notebooks")
+  .then((res) => res.json())
+  .then((data) => {
+    notebooks = data;
+    fillNotebookDropdown();
+  })
+  .catch(() => {
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
+    if (reload) location.reload();
+  });
+
 function sortNotes(notesArray, sortType, order) {
   if (!notesArray || notesArray.length === 0) return notesArray;
 
@@ -104,19 +117,6 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-fetch("http://localhost:3000/api/notebooks")
-  .then((res) => res.json())
-  .then((data) => {
-    notebooks = data;
-    fillNotebookDropdown();
-  })
-  .catch(() => {
-    const reload = confirm(
-      "Failed to load notebooks. Click OK to reload the page.",
-    );
-    if (reload) location.reload();
-  });
-
 function fillNotebookDropdown() {
   notebooks.forEach((nb) => {
     const option = document.createElement("option");
@@ -168,7 +168,7 @@ function renderNotes() {
     filteredNotes = notes.filter(
       (n) =>
         n.title.toLowerCase().includes(searchTerm) ||
-        n.content.toLowerCase().includes(searchTerm)
+        n.content.toLowerCase().includes(searchTerm),
     );
 
     notesSection.classList.remove("hidden");
@@ -220,6 +220,14 @@ function renderNotes() {
       <p data-testid="note-content">
         ${highlightText(note.content, searchTerm)}
       </p>
+       <div class="note-content">
+       <p data-testid="note-content">${note.content}</p>
+       <div class="version-wrapper"> 
+          <p class="version-label">Versions: </p>
+          <select name="Version Selector" class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}">
+          ${showVersions(note.id)}
+          </select>
+      </div>
     `;
 
     div.querySelector(".edit-note").addEventListener("click", (e) => {
@@ -232,6 +240,18 @@ function renderNotes() {
       deleteNote(note.id);
     });
 
+    const versionSelect = div.querySelector(".note-version");
+    // Verhindert, dass Klicks auf das Select das Modal öffnen (Event Bubbling)
+    versionSelect.addEventListener("click", (e) => e.stopPropagation());
+    versionSelect.addEventListener("change", (e) => {
+      const versionId = e.target.value;
+      const version = note.versions.find((v) => v.versionId == versionId);
+      if (version) {
+        openEdit(version);
+        versionSelect.value = "";
+      }
+    });
+
     notesList.appendChild(div);
   });
 }
@@ -239,6 +259,21 @@ function renderNotes() {
 searchInput.addEventListener("input", () => {
   renderNotes();
 });
+
+function showVersions(noteId) {
+  const noteToEdit = notes.find((note) => note.id == noteId);
+  let options = `<option value="">Versions</option>`;
+
+  if (noteToEdit && noteToEdit.versions.length > 0) {
+    options += noteToEdit.versions
+      .map(
+        (val) =>
+          `<option class="version-option" value="${val.versionId}">Created At: ${new Date(val.updatedAt).toLocaleDateString()}</option>`,
+      )
+      .join("");
+  }
+  return options;
+}
 
 addNoteInSection.onclick = () => {
   if (!selectedNotebookId) {
@@ -307,7 +342,7 @@ function openEdit(note) {
 function closeModal() {
   const message = document.getElementById("titleLimitMessage");
   message.classList.add("hidden");
-  
+
   modal.classList.add("hidden");
 }
 
@@ -323,6 +358,14 @@ noteForm.addEventListener("submit", (e) => {
 
   if (editNoteId) {
     const note = notes.find((n) => n.id === editNoteId);
+    note.versions.push({
+      versionId: note.versions.length + 1,
+      id: note.id,
+      notebookId: note.notebookId,
+      title: note.title,
+      content: note.content,
+      updatedAt: note.updatedAt,
+    });
     note.title = titleInput.value;
     note.content = contentInput.value;
     note.updatedAt = Date.now();
@@ -333,6 +376,7 @@ noteForm.addEventListener("submit", (e) => {
       title: titleInput.value,
       content: contentInput.value,
       updatedAt: Date.now(),
+      versions: [],
     });
   }
 
