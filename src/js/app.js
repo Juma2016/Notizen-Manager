@@ -330,6 +330,8 @@ function renderNotes() {
       }
       <div class="note-content">
        <p data-testid="note-content">${note.content}</p>
+       <div class="note-content">
+       <p data-testid="note-content">${highlightText(note.content, searchTerm)}</p>
        <div class="version-wrapper"> 
           <p class="version-label">Versions: </p>
           <select class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}">
