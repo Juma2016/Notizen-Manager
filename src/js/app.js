@@ -330,8 +330,8 @@ function renderNotes() {
       }
       <div class="note-content">
        <p data-testid="note-content">${note.content}</p>
-       <div style="display: flex; flex-direction: column; margin-left:auto; justify-content:center; align-content:center"> 
-          <p style="text-center; margin-bottom: 4px">Versions: </p>
+       <div class="version-wrapper"> 
+          <p class="version-label">Versions: </p>
           <select class="note-version ${note.versions.length <= 0 ? "note-no-version" : ""}">
           ${showVersions(note.id)}
           </select>
@@ -424,7 +424,8 @@ function showVersions(noteId) {
     `<option value="">Versions</option>` +
     noteToEdit.versions
       .map(
-        (val) => `<option value="${val.versionId}">Version ${val.versionId}</option>`,
+        (val) =>
+          `<option class="version-option" value="${val.versionId}">Created At: ${new Date(val.updatedAt).toLocaleDateString()}</option>`,
       )
       .join("")
   );

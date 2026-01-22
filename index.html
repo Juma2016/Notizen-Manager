@@ -23,41 +23,43 @@
         <span id="errorText">Could not load data.</span>
         <button id="retryButton">Retry</button>
       </div>
-<section id="notebooksSection">
-  <div class="selector-row">
-    <div class="notebook-selector">
-      <label for="notebookDropdown">Select Notebook:</label>
-      <select
-        id="notebookDropdown"
-        data-testid="notebookDropdown"
-        class="notebook-dropdown"
-      >
-        <option value="">Select a notebook...</option>
-      </select>
 
-      <div id="notebookInfo" class="notebook-info hidden">
-        <div class="notebook-details">
-          <h3 id="selectedNotebookName">Notebook Name</h3>
-          <p class="last-updated">
-            Last updated: <span id="selectedNotebookDate">-</span>
-          </p>
+      <!-- Notebook + Sort -->
+      <section id="notebooksSection">
+        <div class="selector-row">
+          <div class="notebook-selector">
+            <label for="notebookDropdown">Select Notebook:</label>
+            <select
+              id="notebookDropdown"
+              data-testid="notebookDropdown"
+              class="notebook-dropdown"
+            >
+              <option value="">Select a notebook...</option>
+            </select>
+
+            <div id="notebookInfo" class="notebook-info hidden">
+              <div class="notebook-details">
+                <h3 id="selectedNotebookName">Notebook Name</h3>
+                <p class="last-updated">
+                  Last updated: <span id="selectedNotebookDate">-</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="sort-controls">
+            <label for="sort-select">Sort by:</label>
+            <select id="sort-select">
+              <option value="title-asc">Title A → Z</option>
+              <option value="title-desc">Title Z → A</option>
+              <option value="date-asc">Date (oldest first)</option>
+              <option value="date-desc">Date (newest first)</option>
+            </select>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="sort-controls">
-      <label for="sort-select">Sort by:</label>
-      <select id="sort-select">
-        <option value="title-asc">Title A → Z</option>
-        <option value="title-desc">Title Z → A</option>
-        <option value="date-asc">Date (oldest first)</option>
-        <option value="date-desc">Date (newest first)</option>
-      </select>
-    </div>
-  </div>
-</section>
-
-
+      <!-- Notes -->
       <section id="notesSection" class="hidden">
         <div class="notes-header">
           <h2><span id="notebookName"></span></h2>
@@ -98,6 +100,7 @@
       </section>
     </main>
 
+    <!-- Create / Edit Modal -->
     <div id="modal" class="modal hidden">
       <div class="modal-box">
         <h2 id="modalTitle">Create New Note</h2>
@@ -130,7 +133,7 @@
           </div>
 
           <div class="input-group">
-            <label for="tags">tags</label>
+            <label for="tags">Tags</label>
             <input
               id="tags"
               type="text"
@@ -149,6 +152,7 @@
       </div>
     </div>
 
+    <!-- Details View -->
     <div id="noteContentView" class="note-content-view hidden">
       <div class="note-content-box">
         <div class="note-content-header">

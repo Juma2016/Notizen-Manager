@@ -244,6 +244,24 @@ button:hover {
    color: #ffffff;
 }
 
+.version-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  justify-content: center;
+  align-content: center;
+}
+
+.version-label {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.version-option {
+  font-weight: bold;
+  padding: 0.75rem;
+}
+
 .edit-note {
   background: #2a3347;
   border: 1px solid #4f8cff;
@@ -272,6 +290,10 @@ button:hover {
   align-items: center;
   z-index: 1000;
   padding: 20px;
+}
+
+#modalTitle {
+  margin-bottom: 1rem;
 }
 
 .modal-box {
