@@ -33,6 +33,7 @@
               id="notebookDropdown"
               data-testid="notebookDropdown"
               class="notebook-dropdown"
+              title="Select a notebook"
             >
               <option value="">Select a notebook...</option>
             </select>
@@ -50,6 +51,8 @@
           <div class="sort-controls">
             <label for="sort-select">Sort by:</label>
             <select id="sort-select">
+            <span>Sort by:</span>
+            <select id="sort-select" title="Sort notes by">
               <option value="title-asc">Title A → Z</option>
               <option value="title-desc">Title Z → A</option>
               <option value="date-asc">Date (oldest first)</option>
