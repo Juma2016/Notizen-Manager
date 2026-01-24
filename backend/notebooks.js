@@ -1,3 +1,4 @@
+// backend/notebooks.js
 import express from "express";
 import path from "path";
 import fs from "fs";
@@ -17,64 +18,41 @@ app.use(express.json());
 app.use(cors());
 
 app.get(route, (_, res) => {
-  try {
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        return res.status(500).send("Error reading notebooks.json file");
-      }
-
+  fs.readFile(filePath, (err, data) => {
+    if (err) return res.status(500).send("Error reading notebooks.json file");
+    try {
       const notebooks = JSON.parse(data);
       return res.status(200).send(notebooks);
-    });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .send({ error: error, message: "Internal Server Error" });
-  }
+    } catch {
+      return res.status(500).send("Invalid notebooks.json file");
+    }
+  });
 });
 
-/**
- * Implemented post for possible future use
- */
 app.post(route, (req, res) => {
-  try {
-    const { id, title } = req.body;
-    if (!id || !title) {
-      return res.status(400).send("Required Fields missing");
+  const { id, title } = req.body || {};
+  if (!id || !title) return res.status(400).send("Required Fields missing");
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) return res.status(500).send("Error reading notebooks.json file");
+
+    let oldNoteBooks = [];
+    try {
+      oldNoteBooks = JSON.parse(data);
+      if (!Array.isArray(oldNoteBooks)) oldNoteBooks = [];
+    } catch {
+      oldNoteBooks = [];
     }
 
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        return res.status(500).send("Error reading notebooks.json file");
-      }
+    const jsonData = JSON.stringify([...oldNoteBooks, { id, title }]);
 
-      const oldNoteBooks = JSON.parse(data);
-      const jsonData = JSON.stringify([
-        ...oldNoteBooks,
-        { id: id, title: title },
-      ]);
-
-      fs.writeFile(filePath, jsonData, (err) => {
-        if (err) {
-          return res.status(500).send("Error posting new notebook");
-        } else {
-          return res
-            .status(200)
-            .send({ id, title, message: "Succeesfully appended new Notebook" });
-        }
-      });
+    fs.writeFile(filePath, jsonData, (err2) => {
+      if (err2) return res.status(500).send("Error posting new notebook");
+      return res.status(200).send({ id, title, message: "Succeesfully appended new Notebook" });
     });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .send({ error: error, message: "Internal Server Error" });
-  }
+  });
 });
 
-app.get("/", async (_, res) => {
-  return res.send(healthmessage);
-});
+app.get("/", (_, res) => res.send(healthmessage));
 
 app.listen(PORT, () => console.log(healthmessage));
