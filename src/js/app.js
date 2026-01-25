@@ -42,14 +42,18 @@ function normalizeNote(n) {
   note.title = String(note.title ?? "");
   note.content = String(note.content ?? "");
   note.updatedAt = Number(note.updatedAt ?? Date.now());
-  note.tags = Array.isArray(note.tags) ? note.tags.map((t) => String(t).trim()).filter(Boolean) : [];
+  note.tags = Array.isArray(note.tags)
+    ? note.tags.map((t) => String(t).trim()).filter(Boolean)
+    : [];
   note.versions = Array.isArray(note.versions) ? note.versions : [];
   note.versions = note.versions.map((v) => ({
     versionId: Number(v.versionId ?? 0),
     parentId: String(v.parentId ?? note.id),
     title: String(v.title ?? ""),
     content: String(v.content ?? ""),
-    tags: Array.isArray(v.tags) ? v.tags.map((t) => String(t).trim()).filter(Boolean) : [],
+    tags: Array.isArray(v.tags)
+      ? v.tags.map((t) => String(t).trim()).filter(Boolean)
+      : [],
     updatedAt: Number(v.updatedAt ?? 0),
   }));
   return note;
@@ -98,7 +102,9 @@ function sortNotes(notesArray, sortType, order) {
   sorted.sort((a, b) => {
     let cmp = 0;
     if (sortType === "title") {
-      cmp = String(a.title || "").toLowerCase().localeCompare(String(b.title || "").toLowerCase());
+      cmp = String(a.title || "")
+        .toLowerCase()
+        .localeCompare(String(b.title || "").toLowerCase());
     } else {
       cmp = Number(a.updatedAt || 0) - Number(b.updatedAt || 0);
     }
@@ -161,14 +167,20 @@ function getFilteredNotes() {
   if (q) {
     filtered = filtered.filter(
       (n) =>
-        String(n.title || "").toLowerCase().includes(q) ||
-        String(n.content || "").toLowerCase().includes(q),
+        String(n.title || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(n.content || "")
+          .toLowerCase()
+          .includes(q),
     );
   }
 
   if (!allMode && selectedTags.size > 0) {
     filtered = filtered.filter((n) =>
-      [...selectedTags].every((t) => (Array.isArray(n.tags) ? n.tags : []).includes(t)),
+      [...selectedTags].every((t) =>
+        (Array.isArray(n.tags) ? n.tags : []).includes(t),
+      ),
     );
   }
 
@@ -180,17 +192,21 @@ function getFilteredNotes() {
   return { filtered, q };
 }
 
-function viewNoteContent(note) {
+function viewNoteContent(note, e) {
+  if (e.target.tagName === "SELECT") return;
+
   const titleElement = document.getElementById("viewNoteTitle");
   const contentElement = document.getElementById("viewNoteContent");
   const wrapper = document.getElementById("noteContentView");
 
-  if (!titleElement || !contentElement || !wrapper) return;
+  if (!titleElement || !contentElement || !wrapper || e.target.innerText.begin)
+    return;
 
   const maxLength = 60;
   const title = String(note.title || "");
 
-  titleElement.textContent = title.length > maxLength ? `${title.slice(0, maxLength)}...` : title;
+  titleElement.textContent =
+    title.length > maxLength ? `${title.slice(0, maxLength)}...` : title;
   titleElement.title = title.length > maxLength ? title : "";
   contentElement.textContent = String(note.content || "");
   wrapper.classList.remove("hidden");
@@ -218,7 +234,8 @@ function openEdit(note) {
   contentInput.value = String(note.content || "");
   tagsInput.value = Array.isArray(note.tags) ? note.tags.join(", ") : "";
   if (titleLimitMessage) {
-    if (titleInput.value.length >= 50) titleLimitMessage.classList.remove("hidden");
+    if (titleInput.value.length >= 50)
+      titleLimitMessage.classList.remove("hidden");
     else titleLimitMessage.classList.add("hidden");
   }
   modal?.classList.remove("hidden");
@@ -255,7 +272,9 @@ function buildVersionSelect(note) {
   select.addEventListener("change", (e) => {
     const versionId = String(e.target.value || "");
     if (!versionId) return;
-    const version = note.versions.find((v) => String(v.versionId) === versionId);
+    const version = note.versions.find(
+      (v) => String(v.versionId) === versionId,
+    );
     if (version) openEdit(version);
     select.value = "";
   });
@@ -271,16 +290,21 @@ function renderNotes() {
   const { filtered, q } = getFilteredNotes();
 
   if (filtered.length === 0) {
-    if (q) notesList.innerHTML = '<p class="no-results">Keine Ergebnisse gefunden</p>';
-    else if (selectedNotebookId) notesList.innerHTML = '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
-    else notesList.innerHTML = '<p class="no-results">Keine Notizen vorhanden</p>';
+    if (q)
+      notesList.innerHTML =
+        '<p class="no-results">Keine Ergebnisse gefunden</p>';
+    else if (selectedNotebookId)
+      notesList.innerHTML =
+        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+    else
+      notesList.innerHTML = '<p class="no-results">Keine Notizen vorhanden</p>';
     return;
   }
 
   filtered.forEach((note) => {
     const card = document.createElement("div");
     card.className = "note-item";
-    card.addEventListener("click", () => viewNoteContent(note));
+    card.addEventListener("click", (e) => viewNoteContent(note, e));
 
     const header = document.createElement("div");
     header.className = "note-header";
@@ -289,6 +313,7 @@ function renderNotes() {
 
     const title = document.createElement("strong");
     title.setAttribute("data-testid", "note-title");
+    title.setAttribute("id", "note-title");
     title.innerHTML = highlightText(note.title || "", q);
 
     const date = document.createElement("p");
@@ -374,7 +399,7 @@ function syncNotesSectionVisibility() {
   }
 
   notesSection?.classList.remove("hidden");
-  
+
   const sortControls = document.getElementById("sortControls");
   if (selectedNotebookId && !q) {
     sortControls?.classList.remove("hidden");
@@ -384,12 +409,15 @@ function syncNotesSectionVisibility() {
 
   if (q) {
     notebookName.textContent = "Suchergebnisse";
-    if (addNoteInSection) addNoteInSection.style.display = selectedNotebookId ? "none" : "none";
+    if (addNoteInSection)
+      addNoteInSection.style.display = selectedNotebookId ? "none" : "none";
     return;
   }
 
   if (selectedNotebookId) {
-    const nb = notebooks.find((n) => String(n.id) === String(selectedNotebookId));
+    const nb = notebooks.find(
+      (n) => String(n.id) === String(selectedNotebookId),
+    );
     notebookName.textContent = nb?.title || "Notizbuch";
     if (addNoteInSection) addNoteInSection.style.display = "block";
   }
@@ -425,7 +453,8 @@ function initEvents() {
 
   if (tagFilter) {
     tagFilter.addEventListener("mousedown", (e) => {
-      if (e.target && e.target.tagName === "OPTION") lastTagClickValue = e.target.value;
+      if (e.target && e.target.tagName === "OPTION")
+        lastTagClickValue = e.target.value;
     });
 
     tagFilter.addEventListener("change", () => {
@@ -510,21 +539,25 @@ function initEvents() {
 
   document.addEventListener("keydown", (e) => {
     const v = document.getElementById("noteContentView");
-    if (e.key === "Escape" && v && !v.classList.contains("hidden")) closeNoteView();
-    if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) closeModal();
+    if (e.key === "Escape" && v && !v.classList.contains("hidden"))
+      closeNoteView();
+    if (e.key === "Escape" && modal && !modal.classList.contains("hidden"))
+      closeModal();
   });
 
   if (titleInput) {
     titleInput.addEventListener("input", () => {
       if (!titleLimitMessage) return;
-      if (titleInput.value.length >= 50) titleLimitMessage.classList.remove("hidden");
+      if (titleInput.value.length >= 50)
+        titleLimitMessage.classList.remove("hidden");
       else titleLimitMessage.classList.add("hidden");
     });
 
     titleInput.addEventListener("paste", () => {
       setTimeout(() => {
         if (!titleLimitMessage) return;
-        if (titleInput.value.length >= 50) titleLimitMessage.classList.remove("hidden");
+        if (titleInput.value.length >= 50)
+          titleLimitMessage.classList.remove("hidden");
         else titleLimitMessage.classList.add("hidden");
       }, 0);
     });
@@ -557,7 +590,9 @@ function initEvents() {
           updatedAt: existing.updatedAt,
         };
 
-        existing.versions = Array.isArray(existing.versions) ? existing.versions : [];
+        existing.versions = Array.isArray(existing.versions)
+          ? existing.versions
+          : [];
         existing.versions.push(snapshot);
 
         existing.title = titleInput.value.trim();
@@ -593,7 +628,9 @@ async function init() {
     await loadNotebooks();
     fillNotebookDropdown();
   } catch {
-    const reload = confirm("Failed to load notebooks. Click OK to reload the page.");
+    const reload = confirm(
+      "Failed to load notebooks. Click OK to reload the page.",
+    );
     if (reload) location.reload();
   }
 }

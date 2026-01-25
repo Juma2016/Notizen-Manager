@@ -5,6 +5,7 @@ import {
   universityNotes,
   workNotes,
 } from "./filterobjects";
+import { lifeNotes } from "./tagObjects";
 import { createNote, createNotesInNotebook } from "./createNotes";
 
 const frontendUrl = "http://127.0.0.1:5500/index.html"; // Change URL to your frontend URL
@@ -102,10 +103,10 @@ test("Editieren einer Notiz aktualisiert den Zeitstempel", async ({ page }) => {
 
   await page.getByTestId("notebookDropdown").selectOption("nb1");
   await createNote(page, "Zeit-Test", "Inhalt vor dem Edit");
-  
+
   const oldDateText = await page.locator(".note-date").first().textContent();
-  
-  await page.waitForTimeout(1500); 
+
+  await page.waitForTimeout(1500);
 
   await page.getByRole("button", { name: "Edit" }).first().click();
   await page.getByTestId("title").fill("Zeit-Test Editierter Titel");
@@ -134,16 +135,63 @@ test("Suche filtert korrekt", async ({ page }) => {
 
   await expect(page.getByTestId("note-title")).toHaveCount(2);
   await expect(page.getByTestId("note-title")).toHaveText([
-    "Client Presentation",
     "Group Project",
+    "Client Presentation",
   ]);
 
   await page.locator("#search").clear();
 
   await expect(page.getByTestId("note-title")).toHaveCount(3);
   await expect(page.getByTestId("note-title")).toHaveText([
-    "Exam Preparation",
-    "Thesis Deadline",
     "Group Project",
+    "Thesis Deadline",
+    "Exam Preparation",
   ]);
+});
+
+test("Alphabetische Sortierung nach Titel funktioniert korrekt", async ({
+  page,
+}) => {
+  await page.goto(frontendUrl);
+
+  await createNotesInNotebook(page, "nb3", shoppingLists);
+
+  await page.getByTestId("sort-select").selectOption("title-asc");
+  const noteTitlesAsc = page.getByTestId("note-title");
+
+  await expect(noteTitlesAsc).toHaveText([
+    "Electronics Store",
+    "Pharmacy",
+    "Weekend Groceries",
+  ]);
+
+  await page.getByTestId("sort-select").selectOption("title-desc");
+  const noteTitlesDesc = page.getByTestId("note-title");
+
+  await expect(noteTitlesDesc).toHaveText(
+    ["Electronics Store", "Pharmacy", "Weekend Groceries"].reverse(),
+  );
+});
+
+test("Filtern nach mehreren Tags funktioniert korrekt", async ({ page }) => {
+  await page.goto(frontendUrl);
+
+  await createNotesInNotebook(page, "nb2", lifeNotes);
+
+  await page.getByTestId("tagFilter").selectOption("fitness");
+
+  let noteContent = page.getByTestId("note-content");
+
+  await expect(noteContent).toHaveText([
+    "Cook chicken and rice for the next 3 days.",
+    "Monday: Chest and Triceps. Wednesday: Back and Biceps.",
+  ]);
+
+  await page.getByTestId("tagFilter").selectOption("reading");
+
+  noteContent = page.getByTestId("note-content");
+
+  await expect(noteContent).toHaveText(
+    "Read chapters 1-5 of The Great Gatsby.",
+  );
 });
