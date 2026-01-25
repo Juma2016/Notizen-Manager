@@ -369,10 +369,18 @@ function syncNotesSectionVisibility() {
 
   if (!selectedNotebookId && !q) {
     notesSection?.classList.add("hidden");
+    document.getElementById("sortControls")?.classList.add("hidden");
     return;
   }
 
   notesSection?.classList.remove("hidden");
+  
+  const sortControls = document.getElementById("sortControls");
+  if (selectedNotebookId && !q) {
+    sortControls?.classList.remove("hidden");
+  } else {
+    sortControls?.classList.add("hidden");
+  }
 
   if (q) {
     notebookName.textContent = "Suchergebnisse";

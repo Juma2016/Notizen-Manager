@@ -47,7 +47,7 @@
             </div>
           </div>
 
-          <div class="sort-controls">
+          <div id="sortControls" class="sort-controls hidden">
             <label for="sort-select">Sort by:</label>
             <select id="sort-select" title="Sort notes by">
               <option value="title-asc">Title A → Z</option>
@@ -64,13 +64,25 @@
           <h2><span id="notebookName"></span></h2>
           <div>
             <label for="tagFilter">Filter by tags:</label>
-            <select id="tagFilter" data-testid="tagFilter" class="tag-dropdown" multiple size="1">
+            <select
+              id="tagFilter"
+              data-testid="tagFilter"
+              class="tag-dropdown"
+              multiple
+              size="1"
+            >
               <option value="">All tags</option>
             </select>
 
-            <button id="cancelEditButton" class="cancel-button hidden">Cancel</button>
+            <button id="cancelEditButton" class="cancel-button hidden">
+              Cancel
+            </button>
 
-            <button id="addNoteInSection" data-testid="addNoteInSection" class="main-button">
+            <button
+              id="addNoteInSection"
+              data-testid="addNoteInSection"
+              class="main-button"
+            >
               + Add Note
             </button>
           </div>
@@ -78,7 +90,9 @@
 
         <div id="emptyState" class="empty hidden">
           <p>No notes in this notebook yet.</p>
-          <button id="addFirstNote" class="main-button">Create Your First Note</button>
+          <button id="addFirstNote" class="main-button">
+            Create Your First Note
+          </button>
         </div>
 
         <div id="notesList"></div>
@@ -107,18 +121,30 @@
 
           <div class="input-group">
             <label for="content">Content*</label>
-            <textarea id="content" data-testid="content" required placeholder="Write your note..."></textarea>
+            <textarea
+              id="content"
+              data-testid="content"
+              required
+              placeholder="Write your note..."
+            ></textarea>
             <div id="contentError" class="error-message hidden"></div>
           </div>
 
           <div class="input-group">
             <label for="tags">Tags</label>
-            <input id="tags" type="text" data-testid="tags" placeholder="e.g., work, uni, todo" />
+            <input
+              id="tags"
+              type="text"
+              data-testid="tags"
+              placeholder="e.g., work, uni, todo"
+            />
           </div>
 
           <div class="form-buttons">
             <button type="button" id="cancelButton">Cancel</button>
-            <button type="submit" id="saveButton" class="main-button">Save Note</button>
+            <button type="submit" id="saveButton" class="main-button">
+              Save Note
+            </button>
           </div>
         </form>
       </div>
