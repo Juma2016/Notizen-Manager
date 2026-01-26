@@ -104,7 +104,6 @@ npm test
     </tr>
   </thead>
   <tbody>
-    <!-- Linda -->
     <tr>
       <td><em>Linda Kadyrova</em></td>
       <td>
