@@ -1,4 +1,64 @@
 /* style.css */
+
+/* Theme tokens */
+:root{
+  color-scheme: light;
+  --bg:#f6f7fb;
+  --text:#121826;
+
+  --surface:#ffffff;
+  --surface-2:#f2f4f8;
+  --surface-3:rgba(0,0,0,.03);
+
+  --border:rgba(18,24,38,.12);
+  --border-soft:rgba(18,24,38,.08);
+
+  --muted:#52606d;
+
+  --accent:#2f6ef0;
+  --accent2:#4f8cff;
+
+  --button:var(--surface-2);
+  --button-hover:#e6eaf2;
+
+  --danger:#dc2626;
+  --danger-bg:rgba(220,38,38,.10);
+  --danger-border:rgba(220,38,38,.25);
+  --danger-text:#b91c1c;
+
+  --overlay:rgba(0,0,0,.45);
+  --overlay-strong:rgba(0,0,0,.75);
+}
+
+html[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0f1115;
+  --text:#e8eefc;
+
+  --surface:#151922;
+  --surface-2:#1b2130;
+  --surface-3:rgba(255,255,255,.03);
+
+  --border:#2a3347;
+  --border-soft:rgba(255,255,255,.05);
+
+  --muted:#8a94ad;
+
+  --accent:#2f6ef0;
+  --accent2:#4f8cff;
+
+  --button:#1b2130;
+  --button-hover:#2a3347;
+
+  --danger:#ff4d4d;
+  --danger-bg:rgba(255,77,77,.12);
+  --danger-border:rgba(255,77,77,.25);
+  --danger-text:#ff9999;
+
+  --overlay:rgba(0,0,0,.55);
+  --overlay-strong:rgba(0,0,0,.85);
+}
+
 *{
   margin:0;
   padding:0;
@@ -7,8 +67,8 @@
 
 body{
   font-family:sans-serif;
-  background:#0f1115;
-  color:#e8eefc;
+  background:var(--bg);
+  color:var(--text);
   min-height:100vh
 }
 
@@ -19,8 +79,8 @@ body{
 }
 
 .header{
-  background:#151922;
-  border-bottom:1px solid #2a3347;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
   position:sticky;
   top:0;
   z-index:100
@@ -33,51 +93,57 @@ body{
   padding:15px 20px
 }
 
+.tools{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
 #search{
   padding:10px 15px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   border-radius:12px;
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   width:300px
 }
 
 #search:focus{
-  border-color:#4f8cff;
+  border-color:var(--accent2);
   outline:none
 }
 
 button{
   padding:10px 15px;
   border-radius:12px;
-  border:1px solid #2a3347;
-  background:#1b2130;
-  color:#e8eefc;
+  border:1px solid var(--border);
+  background:var(--button);
+  color:var(--text);
   cursor:pointer;
   font-weight:600
 }
 
 button:hover{
-  background:#2a3347
+  background:var(--button-hover)
 }
 
 .main-button{
-  background:linear-gradient(135deg,#4f8cff,#2f6ef0);
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
   border:none
 }
 
 .main-button:hover{
-  background:linear-gradient(135deg,#2f6ef0,#4f8cff)
+  background:linear-gradient(135deg,var(--accent),var(--accent2))
 }
 
 .cancel-button{
-  background:#2a3347;
-  border:1px solid #4f8cff;
-  color:#e8eefc
+  background:var(--button-hover);
+  border:1px solid var(--accent2);
+  color:var(--text)
 }
 
 .cancel-button:hover{
-  background:#3a4457
+  background:var(--button-hover)
 }
 
 .selector-row{
@@ -97,41 +163,41 @@ button:hover{
 .notebook-dropdown{
   width:100%;
   padding:12px 15px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   border-radius:12px;
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   font-size:16px;
   cursor:pointer
 }
 
 .notebook-dropdown:focus{
-  border-color:#4f8cff;
+  border-color:var(--accent2);
   outline:none
 }
 
 .notebook-dropdown option{
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   padding:10px
 }
 
 .notebook-info{
   margin-top:20px;
-  background:#151922;
-  border:1px solid #2a3347;
+  background:var(--surface);
+  border:1px solid var(--border);
   border-radius:14px;
   padding:20px
 }
 
 .notebook-details h3{
-  color:#e8eefc;
+  color:var(--text);
   margin-bottom:8px;
   font-size:20px
 }
 
 .last-updated{
-  color:#8a94ad;
+  color:var(--muted);
   font-size:14px
 }
 
@@ -146,17 +212,17 @@ button:hover{
 
 #sort-select{
   padding:10px 15px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   border-radius:12px;
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   font-size:14px;
   min-width:200px;
   cursor:pointer
 }
 
 #sort-select:focus{
-  border-color:#4f8cff;
+  border-color:var(--accent2);
   outline:none
 }
 
@@ -174,15 +240,15 @@ button:hover{
 }
 
 .note-item{
-  background:#151922;
-  border:1px solid #2a3347;
+  background:var(--surface);
+  border:1px solid var(--border);
   border-radius:14px;
   padding:20px;
   cursor:pointer
 }
 
 .note-item:hover{
-  border-color:#4f8cff
+  border-color:var(--accent2)
 }
 
 .note-header{
@@ -197,7 +263,7 @@ button:hover{
 }
 
 .note-date{
-  color:#8a94ad;
+  color:var(--muted);
   font-size:.85rem;
   margin-top:4px;
   margin-bottom:8px;
@@ -223,8 +289,8 @@ button:hover{
 .note-version{
   padding:5px 10px;
   border-radius:6px;
-  background-color:#2f6ef0;
-  border:1px solid #4f8cff;
+  background-color:var(--accent);
+  border:1px solid var(--accent2);
   width:6rem;
   height:2rem;
   font-size:12px;
@@ -234,9 +300,9 @@ button:hover{
 }
 
 .note-no-version{
-  background-color:#151922;
-  border:1px solid #1e283a;
-  color:#ffffff
+  background-color:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text)
 }
 
 .version-wrapper{
@@ -258,18 +324,18 @@ button:hover{
 }
 
 .edit-note{
-  background:#2a3347;
-  border:1px solid #4f8cff
+  background:var(--border);
+  border:1px solid var(--accent2)
 }
 
 .delete-note{
-  background:#5a1e1e;
-  border:1px solid #ff4d4d;
-  color:#ff9999
+  background:var(--danger-bg);
+  border:1px solid var(--danger);
+  color:var(--danger-text)
 }
 
 .delete-note:hover{
-  background:#6a2e2e
+  background:var(--danger-bg)
 }
 
 .modal{
@@ -278,7 +344,7 @@ button:hover{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,.55);
+  background:var(--overlay);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -291,8 +357,8 @@ button:hover{
 }
 
 .modal-box{
-  background:#151922;
-  border:1px solid #2a3347;
+  background:var(--surface);
+  border:1px solid var(--border);
   border-radius:14px;
   padding:30px;
   width:100%;
@@ -307,10 +373,10 @@ button:hover{
 .input-group textarea{
   width:100%;
   padding:12px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   border-radius:12px;
-  background:#151922;
-  color:#e8eefc
+  background:var(--surface);
+  color:var(--text)
 }
 
 .input-group textarea{
@@ -326,9 +392,9 @@ button:hover{
 }
 
 .error{
-  background:rgba(255,77,77,.12);
-  border:1px solid rgba(255,77,77,.25);
-  color:#ff4d4d;
+  background:var(--danger-bg);
+  border:1px solid var(--danger-border);
+  color:var(--danger);
   padding:15px;
   border-radius:12px;
   margin-bottom:20px
@@ -339,11 +405,11 @@ button:hover{
   bottom:20px;
   left:50%;
   transform:translateX(-50%);
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   padding:15px 25px;
   border-radius:12px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   z-index:1001
 }
 
@@ -413,7 +479,7 @@ button:hover{
 
 .note-tags{
   margin-top:10px;
-  color:#8a94ad;
+  color:var(--muted);
   font-size:.85rem;
   line-height:1.4;
   word-wrap:break-word
@@ -428,22 +494,22 @@ button:hover{
 
 .tag-dropdown{
   padding:10px 14px;
-  border:1px solid #2a3347;
+  border:1px solid var(--border);
   border-radius:12px;
-  background:#151922;
-  color:#e8eefc;
+  background:var(--surface);
+  color:var(--text);
   cursor:pointer;
   min-width:140px
 }
 
 .tag-dropdown:focus{
-  border-color:#4f8cff;
+  border-color:var(--accent2);
   outline:none
 }
 
 .tag-dropdown option{
-  color:#111;
-  background:#fff
+  color: var(--text);
+  background: var(--surface);
 }
 
 .note-content-view{
@@ -452,7 +518,7 @@ button:hover{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,.85);
+  background:var(--overlay-strong);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -463,8 +529,8 @@ button:hover{
 }
 
 .note-content-box{
-  background:#151922;
-  border:1px solid #2a3347;
+  background:var(--surface);
+  border:1px solid var(--border);
   border-radius:14px;
   padding:25px;
   width:100%;
@@ -480,13 +546,13 @@ button:hover{
   justify-content:space-between;
   align-items:flex-start;
   margin-bottom:20px;
-  border-bottom:1px solid #2a3347;
+  border-bottom:1px solid var(--border);
   padding-bottom:15px;
   flex-shrink:0
 }
 
 .note-title-truncated{
-  color:#e8eefc;
+  color:var(--text);
   font-size:1.5rem;
   margin:0;
   padding:0;
@@ -505,7 +571,7 @@ button:hover{
 #closeNoteView{
   background:none;
   border:none;
-  color:#ffffff;
+  color:var(--text);
   font-size:28px;
   padding:0;
   margin:0;
@@ -523,16 +589,16 @@ button:hover{
 }
 
 #closeNoteView:hover{
-  background:rgba(255,255,255,.1)
+  background:var(--surface-3)
 }
 
 .note-content-wrapper{
   flex-grow:1;
   overflow-y:auto;
   padding:15px;
-  background:rgba(255,255,255,.03);
+  background:var(--surface-3);
   border-radius:8px;
-  border:1px solid rgba(255,255,255,.05);
+  border:1px solid var(--border-soft);
   margin-top:0
 }
 
@@ -544,7 +610,7 @@ button:hover{
   line-height:1.6;
   font-size:15px;
   font-family:inherit;
-  color:#e8eefc;
+  color:var(--text);
   margin:0;
   padding:0
 }
@@ -578,7 +644,7 @@ button:hover{
 .limit-message{
   margin-top:5px;
   font-size:.85rem;
-  color:#ff4d4d;
+  color:var(--danger);
   text-align:right;
   padding:3px 0;
   animation:fadeIn .3s ease
@@ -590,6 +656,6 @@ button:hover{
 }
 
 .no-results{
-  color:#8a94ad;
+  color:var(--muted);
   padding:20px 0
 }

@@ -635,4 +635,46 @@ async function init() {
   }
 }
 
+(function () {
+  const STORAGE_KEY = "theme"; // "light" | "dark"
+  const root = document.documentElement;
+
+  function systemTheme() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  function apply(theme) {
+    root.dataset.theme = theme;
+    const btn = document.getElementById("themeToggle");
+    if (btn) {
+      const isDark = theme === "dark";
+      btn.setAttribute("aria-pressed", String(isDark));
+      const icon = btn.querySelector("[data-theme-icon]");
+      const label = btn.querySelector("[data-theme-label]");
+      if (icon) icon.textContent = isDark ? "🌙" : "☀️";
+      if (label) label.textContent = isDark ? "Dark" : "Light";
+    }
+  }
+
+  let saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch {}
+  const initial = saved === "light" || saved === "dark" ? saved : systemTheme();
+  apply(initial);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("themeToggle");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      const next = root.dataset.theme === "dark" ? "light" : "dark";
+      apply(next);
+      try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    });
+  });
+})();
+
+
+
 init();
