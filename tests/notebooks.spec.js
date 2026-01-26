@@ -56,7 +56,7 @@ test("Neue Notiz anlegen → erscheint in Liste → Reload → noch da.", async 
   );
 });
 
-test("Bearbeiten → updatedAt ändert sich.", async ({ page }) => {
+test("Bearbeiten → Inhalt aktualisiert sich.", async ({ page }) => {
   await page.goto(frontendUrl);
 
   await page.getByTestId("notebookDropdown").selectOption("nb1");

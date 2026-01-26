@@ -292,12 +292,12 @@ function renderNotes() {
   if (filtered.length === 0) {
     if (q)
       notesList.innerHTML =
-        '<p class="no-results">Keine Ergebnisse gefunden</p>';
+        '<p class="no-results">No results found</p>';
     else if (selectedNotebookId)
       notesList.innerHTML =
-        '<p class="no-results">Noch keine Notizen in diesem Notizbuch</p>';
+        '<p class="no-results">No notes yet in this notebook</p>';
     else
-      notesList.innerHTML = '<p class="no-results">Keine Notizen vorhanden</p>';
+      notesList.innerHTML = '<p class="no-results">No notes available</p>';
     return;
   }
 
@@ -510,7 +510,7 @@ function initEvents() {
   if (addNoteInSection) {
     addNoteInSection.addEventListener("click", () => {
       if (!selectedNotebookId) {
-        alert("Bitte wähle zuerst ein Notizbuch aus");
+        alert("BPlease select a notebook first.");
         return;
       }
       openCreate();
@@ -568,7 +568,7 @@ function initEvents() {
       e.preventDefault();
       if (!titleInput.value.trim() || !contentInput.value.trim()) return;
       if (!selectedNotebookId) {
-        alert("Bitte wähle zuerst ein Notizbuch aus");
+        alert("Please select a notebook first.");
         return;
       }
 

@@ -455,6 +455,16 @@ button:hover{
   .note-actions{
     align-self:flex-start
   }
+    .sort-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  #sort-select {
+    width: 100%;
+    min-width: unset;
+  }
 }
 
 #notesSection{
