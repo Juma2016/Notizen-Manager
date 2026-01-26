@@ -653,8 +653,8 @@ async function init() {
       btn.setAttribute("aria-pressed", String(isDark));
       const icon = btn.querySelector("[data-theme-icon]");
       const label = btn.querySelector("[data-theme-label]");
-      if (icon) icon.textContent = isDark ? "🌙" : "☀️";
-      if (label) label.textContent = isDark ? "Dark" : "Light";
+      if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+      if (label) label.textContent = isDark ? "Light" : "Dark";
     }
   }
 

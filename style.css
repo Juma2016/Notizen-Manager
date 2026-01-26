@@ -15,11 +15,11 @@
 
   --muted:#52606d;
 
-  --accent:#2f6ef0;
+  --accent:#b575ee;
   --accent2:#4f8cff;
 
   --button:var(--surface-2);
-  --button-hover:#e6eaf2;
+  --button-hover:#e6edf2;
 
   --danger:#dc2626;
   --danger-bg:rgba(220,38,38,.10);
@@ -44,7 +44,7 @@ html[data-theme="dark"]{
 
   --muted:#8a94ad;
 
-  --accent:#2f6ef0;
+  --accent:#8a6eee;
   --accent2:#4f8cff;
 
   --button:#1b2130;
