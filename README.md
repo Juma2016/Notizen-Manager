@@ -10,7 +10,9 @@ NOTIZEN-MANAGER/
 │       └── playwright.yml
 ├── backend/
 │   ├── notebooks.js
-│   ├── notebooks.json
+│   └── notebooks.json
+├── resources/
+│   └── note.png
 ├── src/
 │   └── js/
 │       └── app.js
@@ -18,6 +20,7 @@ NOTIZEN-MANAGER/
 │   ├── createNotes.js
 │   ├── filterobjects.js
 │   ├── notebook.spec.js
+│   └── tagObjects.js
 ├── .gitignore
 ├── index.html
 ├── package-lock.json
@@ -189,3 +192,4 @@ npm test
 - [Casper Zielinski](https://github.com/casper-zielinski)
 - [Mario Shenouda](https://github.com/Juma2016)
 - [Maryam Taeid](https://github.com/maryamtaeid)
+
