@@ -1,143 +1,175 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>Notes Manager</title>
+    <link rel="icon" href="/resources/note.png" type="image/png" />
+    <link href="style.css" rel="stylesheet" />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>Notes Manager</title>
-
-  <link href="style.css" rel="stylesheet" />
-</head>
-
-<body>
-  <header class="header">
-    <div class="container">
-      <h1>Notes Manager</h1>
-      <div class="tools">
-        <input id="search" placeholder="Search notes..." type="search" />
-        <button aria-pressed="false" id="themeToggle" type="button">
-          <span data-theme-icon>☀️</span>
-          <span data-theme-label>Light</span>
-        </button>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1>Notes Manager</h1>
+        <div class="tools">
+          <input id="search" placeholder="Search notes..." type="search" />
+          <button aria-pressed="false" id="themeToggle" type="button">
+            <span data-theme-icon>☀️</span>
+            <span data-theme-label>Light</span>
+          </button>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <main class="container">
-    <div class="error hidden" id="errorBox">
-      <strong>Error:</strong>
-      <span id="errorText">Could not load data.</span>
-      <button id="retryButton">Retry</button>
-    </div>
+    <main class="container">
+      <div class="error hidden" id="errorBox">
+        <strong>Error:</strong>
+        <span id="errorText">Could not load data.</span>
+        <button id="retryButton">Retry</button>
+      </div>
 
-    <section id="notebooksSection">
-      <div class="selector-row">
-        <div class="notebook-selector">
-          <select class="notebook-dropdown" data-testid="notebookDropdown" id="notebookDropdown"
-            title="Select a notebook">
-            <option value="">Select a notebook...</option>
-          </select>
+      <section id="notebooksSection">
+        <div class="selector-row">
+          <div class="notebook-selector">
+            <select
+              class="notebook-dropdown"
+              data-testid="notebookDropdown"
+              id="notebookDropdown"
+              title="Select a notebook"
+            >
+              <option value="">Select a notebook...</option>
+            </select>
 
-          <div class="notebook-info hidden" id="notebookInfo">
-            <div class="notebook-details">
-              <h3 id="selectedNotebookName">Notebook Name</h3>
-              <p class="last-updated">
-                Last updated: <span id="selectedNotebookDate">-</span>
-              </p>
+            <div class="notebook-info hidden" id="notebookInfo">
+              <div class="notebook-details">
+                <h3 id="selectedNotebookName">Notebook Name</h3>
+                <p class="last-updated">
+                  Last updated: <span id="selectedNotebookDate">-</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="sort-controls hidden" id="sortControls">
-          <label for="sort-select">Sort by:</label>
-          <select data-testid="sort-select" id="sort-select" title="Sort notes by">
-            <option value="title-asc">Title A → Z</option>
-            <option value="title-desc">Title Z → A</option>
-            <option value="date-asc">Date (oldest first)</option>
-            <option value="date-desc">Date (newest first)</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <section class="hidden" id="notesSection">
-      <div class="notes-header">
-        <h2><span id="notebookName"></span></h2>
-        <div>
-          <label for="tagFilter">Filter by tags:</label>
-          <select class="tag-dropdown" data-testid="tagFilter" id="tagFilter" multiple="" size="1">
-            <option value="">All tags</option>
-          </select>
-          <button class="cancel-button hidden" id="cancelEditButton">
-            Cancel
-          </button>
-          <button class="main-button" data-testid="addNoteInSection" id="addNoteInSection">
-            + Add Note
-          </button>
-        </div>
-      </div>
-
-      <div class="empty hidden" id="emptyState">
-        <p>No notes in this notebook yet.</p>
-        <button class="main-button" id="addFirstNote">
-          Create Your First Note
-        </button>
-      </div>
-
-      <div id="notesList"></div>
-    </section>
-  </main>
-
-  <div class="modal hidden" id="modal">
-    <div class="modal-box">
-      <h2 id="modalTitle">Create New Note</h2>
-      <form id="noteForm">
-        <div class="input-group">
-          <label for="title">Title*</label>
-          <input data-testid="title" id="title" maxlength="50" placeholder="e.g., Shopping list" required=""
-            type="text" />
-          <div class="limit-message hidden" id="titleLimitMessage">
-            Maximale Zeichenlänge (50) erreicht!
+          <div class="sort-controls hidden" id="sortControls">
+            <label for="sort-select">Sort by:</label>
+            <select
+              data-testid="sort-select"
+              id="sort-select"
+              title="Sort notes by"
+            >
+              <option value="title-asc">Title A → Z</option>
+              <option value="title-desc">Title Z → A</option>
+              <option value="date-asc">Date (oldest first)</option>
+              <option value="date-desc">Date (newest first)</option>
+            </select>
           </div>
-          <div class="error-message hidden" id="titleError"></div>
+        </div>
+      </section>
+
+      <section class="hidden" id="notesSection">
+        <div class="notes-header">
+          <h2><span id="notebookName"></span></h2>
+          <div>
+            <label for="tagFilter">Filter by tags:</label>
+            <select
+              class="tag-dropdown"
+              data-testid="tagFilter"
+              id="tagFilter"
+              multiple=""
+              size="1"
+            >
+              <option value="">All tags</option>
+            </select>
+            <button class="cancel-button hidden" id="cancelEditButton">
+              Cancel
+            </button>
+            <button
+              class="main-button"
+              data-testid="addNoteInSection"
+              id="addNoteInSection"
+            >
+              + Add Note
+            </button>
+          </div>
         </div>
 
-        <div class="input-group">
-          <label for="content">Content*</label>
-          <textarea data-testid="content" id="content" placeholder="Write your note..." required=""></textarea>
-          <div class="error-message hidden" id="contentError"></div>
-        </div>
-
-        <div class="input-group">
-          <label for="tags">Tags</label>
-          <input data-testid="tags" id="tags" placeholder="e.g., work, uni, todo" type="text" />
-        </div>
-
-        <div class="form-buttons">
-          <button id="cancelButton" type="button">Cancel</button>
-          <button class="main-button" id="saveButton" type="submit">
-            Save Note
+        <div class="empty hidden" id="emptyState">
+          <p>No notes in this notebook yet.</p>
+          <button class="main-button" id="addFirstNote">
+            Create Your First Note
           </button>
         </div>
-      </form>
-    </div>
-  </div>
 
-  <div class="note-content-view hidden" id="noteContentView">
-    <div class="note-content-box">
-      <div class="note-content-header">
-        <h2 class="note-title-truncated" id="viewNoteTitle"></h2>
-        <button class="cancel-button" id="closeNoteView">×</button>
+        <div id="notesList"></div>
+      </section>
+    </main>
+
+    <div class="modal hidden" id="modal">
+      <div class="modal-box">
+        <h2 id="modalTitle">Create New Note</h2>
+        <form id="noteForm">
+          <div class="input-group">
+            <label for="title">Title*</label>
+            <input
+              data-testid="title"
+              id="title"
+              maxlength="50"
+              placeholder="e.g., Shopping list"
+              required=""
+              type="text"
+            />
+            <div class="limit-message hidden" id="titleLimitMessage">
+              Maximale Zeichenlänge (50) erreicht!
+            </div>
+            <div class="error-message hidden" id="titleError"></div>
+          </div>
+
+          <div class="input-group">
+            <label for="content">Content*</label>
+            <textarea
+              data-testid="content"
+              id="content"
+              placeholder="Write your note..."
+              required=""
+            ></textarea>
+            <div class="error-message hidden" id="contentError"></div>
+          </div>
+
+          <div class="input-group">
+            <label for="tags">Tags</label>
+            <input
+              data-testid="tags"
+              id="tags"
+              placeholder="e.g., work, uni, todo"
+              type="text"
+            />
+          </div>
+
+          <div class="form-buttons">
+            <button id="cancelButton" type="button">Cancel</button>
+            <button class="main-button" id="saveButton" type="submit">
+              Save Note
+            </button>
+          </div>
+        </form>
       </div>
-      <div class="note-content-wrapper">
-        <pre class="note-content-text" id="viewNoteContent"></pre>
+    </div>
+
+    <div class="note-content-view hidden" id="noteContentView">
+      <div class="note-content-box">
+        <div class="note-content-header">
+          <h2 class="note-title-truncated" id="viewNoteTitle"></h2>
+          <button class="cancel-button" id="closeNoteView">×</button>
+        </div>
+        <div class="note-content-wrapper">
+          <pre class="note-content-text" id="viewNoteContent"></pre>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="toast hidden" id="toast"></div>
-  <script src="src/js/app.js"></script>
-</body>
-
+    <div class="toast hidden" id="toast"></div>
+    <script src="src/js/app.js"></script>
+  </body>
 </html>
