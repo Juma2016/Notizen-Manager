@@ -126,17 +126,30 @@ npm test
         </ul>
       </td>
     </tr>
-    <!-- Member 2 -->
-    <tr>
-      <td><em>Maryam Taeid</em></td>
-      <td>
-        <ul>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-      </td>
-    </tr>
+  <!-- Member 2 -->
+<tr>
+  <td><em>Maryam Taeid</em></td>
+  <td>
+    <strong>Early Challenges:</strong>
+    <ul>
+      <li>Implementing the tags/filter feature without breaking existing note rendering logic</li>
+      <li>Dealing with unexpected UI behavior (e.g., tag selection getting stuck on “All tags”)</li>
+      <li>Keeping HTML/CSS structure consistent while removing/adjusting parts of the UI</li>
+    </ul>
+    <strong>Team Coordination:</strong>
+    <ul>
+      <li>Synchronizing UI changes with teammates, JavaScript logic to avoid integration issues</li>
+      <li>Aligning feature expectations (what exactly should be filtered/sorted and where it appears)</li>
+      <li>Ensuring updates don’t conflict with automated tests and existing workflows</li>
+    </ul>
+    <strong>Key Learnings:</strong>
+    <ul>
+      <li>Small, incremental changes with quick testing reduce debugging time</li>
+      <li>Clear ownership of files/features helps prevent overlap and merge conflicts</li>
+      <li>UI changes should be validated against expected behavior and test cases early</li>
+    </ul>
+  </td>
+</tr>
     <!-- Member 3 -->
     <tr>
       <td><em>Mario Shenouda</em></td>
