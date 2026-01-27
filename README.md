@@ -72,7 +72,7 @@ npm run dev
 - **Real-time Search**: Filter notes by title or content with instant results
 - **Persistent Storage**: Notes are saved in browser's localStorage
 
-## Sprint-1 Features
+## Sprint 2 Features
 
 - **Tags:** The user can add one or more tags to a note.  
 - **Filter by tags:** The user can filter notes by selecting one or more specific tags.  
@@ -230,5 +230,6 @@ npm test
 - [Casper Zielinski](https://github.com/casper-zielinski)
 - [Mario Shenouda](https://github.com/Juma2016)
 - [Maryam Taeid](https://github.com/maryamtaeid)
+
 
 
