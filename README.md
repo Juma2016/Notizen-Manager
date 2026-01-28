@@ -224,6 +224,41 @@ npm test
 
 **Key Learnings:** Through this process, I learned the critical importance of clear and proactive communication for smooth team collaboration. I now recognize the value of committing smaller changes more frequently to avoid large, complex merge conflicts. Most importantly, this project underscored that thorough inline code comments and documentation are essential for effective cross-team understanding and efficient onboarding.
 
+### Mario Shenouda
+
+**Role in the project**
+
+- Responsible for frontend development and feature planning.
+- Created the main JavaScript file in the first sprint to ensure a clean and modular structure connected with the HTML and CSS files.
+- In the second sprint, implemented features such as full-text search with highlighted results and light and dark mode.
+
+**What I learned:**
+
+- Learned how to work effectively in a team environment.
+- Gained experience using GitHub for task distribution, collaboration, and supporting teammates when needed.
+
+**Challenges:**
+
+- No major technical issues, but several merge conflicts occurred.
+- Conflicts mainly appeared when working on similar features (e.g., search functionality).
+- Learned the importance of communication and coordination when resolving conflicts.
+
+**Teamwork experience:**
+
+- Overall team collaboration was good and supportive.
+- Minor communication issues occurred, but each team member clearly understood their responsibilities.
+- The team worked efficiently and helped each other when needed.
+
+**What I would do differently:**
+
+- Divide tasks more clearly from the beginning to reduce overlaps and merge conflicts.
+
+**Final outcome:**
+
+- Satisfied with the final result.
+- All required features were successfully implemented.
+- The project was completed before the deadline.
+
 ## Authors
 
 - [Linda Kadyrova](https://github.com/lindakadyrova)
